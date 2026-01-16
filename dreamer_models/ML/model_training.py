@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from typing import List, Tuple, Optional
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.neighbors import KNeighborsClassifier
@@ -126,12 +127,6 @@ def build_lstm_sequences(
     y_arr = np.asarray(y_labels, dtype=np.float32)
     return X_padded, y_arr
 
-import numpy as np
-import pandas as pd
-from typing import List, Tuple, Optional
-import numpy as np
-import pandas as pd
-from typing import List, Tuple, Optional
 
 def build_eego_lstm_sequences(
     df: pd.DataFrame,

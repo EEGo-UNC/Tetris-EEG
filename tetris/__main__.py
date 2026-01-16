@@ -21,9 +21,9 @@ clock = pygame.time.Clock()
 difficulties = [
     #increase_difficulty_lines_cleared,
     # constant_difficulty,
-    increase_difficulty_adaptive,
+    # increase_difficulty_adaptive,
     # increase_difficulty_blocks_placed,
-    # increase_difficulty_minimize_emotion_distance
+    increase_difficulty_minimize_emotion_distance
 ]
 
 difficulty = randint(0, len(difficulties) - 1)
