@@ -11,7 +11,7 @@
 set -euo pipefail
 mkdir -p logs
 
-source ~/venv/bin/activate
+source /venv/bin/activate
 
 export TF_FORCE_GPU_ALLOW_GROWTH=true
 
