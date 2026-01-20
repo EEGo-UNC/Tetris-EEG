@@ -10,18 +10,22 @@
 #SBATCH --error=logs/%x_%j.err
 
 set -euo pipefail
-mkdir -p logs
 
-# Make relative paths work no matter where SLURM starts
-cd "$SLURM_SUBMIT_DIR"
+# Go to repo root (parent of dreamer_models/)
+cd "$(dirname "$0")/.."
+
+mkdir -p logs
 
 module purge
 module load python/3.13
 
-source ../venv/bin/activate
+# venv is at repo root
+source venv/bin/activate
 
-echo "Python:" "$(which python)"
+echo "PWD: $(pwd)"
+echo "Python: $(which python)"
 python --version
 
 export TF_FORCE_GPU_ALLOW_GROWTH=true
-python -u EEGo_models.py
+
+python -u dreamer_models/EEGo_models.py
