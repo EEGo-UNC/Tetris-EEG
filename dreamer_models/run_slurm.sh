@@ -11,17 +11,17 @@
 
 set -euo pipefail
 
-# Go to repo root (parent of dreamer_models/)
+# If this script is in dreamer_models/, this puts you there:
 cd "$(dirname "$0")"
 
+# Make logs directory (either keep logs in repo root or in dreamer_models)
 mkdir -p logs
 
 module purge
 module load python/3.13
 
-# venv is at repo root
-source venv/bin/activate
-
+# Activate venv located one level up (repo root)
+source ../venv/bin/activate
 
 echo "PWD: $(pwd)"
 echo "Python: $(which python)"
@@ -29,4 +29,5 @@ python --version
 
 export TF_FORCE_GPU_ALLOW_GROWTH=true
 
-python -u dreamer_models/EEGo_models.py
+# Now you're already in dreamer_models, so run the script directly
+python -u EEGo_models.py
