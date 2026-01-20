@@ -1,12 +1,13 @@
 #!/bin/bash
 #SBATCH --job-name=eego_gpu
+#SBATCH --partition=h100_sn
+#SBATCH --gres=gpu:1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=32G
+#SBATCH --time=02:00:00
 #SBATCH --output=logs/%x_%j.out
 #SBATCH --error=logs/%x_%j.err
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task=4
-#SBATCH --time=04:00:00
-#SBATCH --mem=16G
-#SBATCH --gres=gpu:1
 
 set -euo pipefail
 mkdir -p logs
