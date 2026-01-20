@@ -17,7 +17,7 @@ cd "$(dirname "$0")"
 module purge
 module load python/3.13
 
-source venv/bin/activate
+source ../venv/bin/activate
 
 echo "Python:" "$(which python)"
 python --version
