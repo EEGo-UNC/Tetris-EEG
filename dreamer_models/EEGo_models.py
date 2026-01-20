@@ -183,7 +183,7 @@ def main() -> None:
     print("Starting EEGo LSTM CV script...", flush=True)
 
     # Load EEGo data
-    df_eego = load_eego_df("datasets/EEGo_labeled.csv")
+    df_eego = load_eego_df("dreamer_models/datasets/EEGo_labeled.csv")
     print("EEGo shape:", df_eego.shape, flush=True)
 
     AROUSAL = "affect_arousal"
@@ -203,7 +203,7 @@ def main() -> None:
         print("Valence Baseline:", baseline, flush=True)
 
     # Load features table
-    features_table = pd.read_csv("datasets/eego_features.csv")
+    features_table = pd.read_csv("dreamer_models/datasets/eego_features.csv")
     feature_cols = select_eego_features(features_table)
     print("n_features:", len(feature_cols), flush=True)
     print(feature_cols, flush=True)

@@ -12,7 +12,7 @@
 set -euo pipefail
 
 # Go to repo root (parent of dreamer_models/)
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")"
 
 mkdir -p logs
 
@@ -21,6 +21,7 @@ module load python/3.13
 
 # venv is at repo root
 source venv/bin/activate
+
 
 echo "PWD: $(pwd)"
 echo "Python: $(which python)"
