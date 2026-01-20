@@ -12,7 +12,7 @@ set -euo pipefail
 mkdir -p logs
 
 cd ~/TETRIS-EEG
-source ~/venv/eego/bin/activate
+source ~/venv/bin/activate
 
 export TF_FORCE_GPU_ALLOW_GROWTH=true
 
