@@ -13,7 +13,7 @@ set -euo pipefail
 mkdir -p logs
 
 # Make relative paths work no matter where SLURM starts
-cd "$(dirname "$0")"
+cd "$SLURM_SUBMIT_DIR"
 
 module purge
 module load python/3.13
