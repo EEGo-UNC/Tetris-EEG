@@ -150,10 +150,10 @@ def build_eego_lstm_sequences(
     y_labels: list[float] = []
 
     for (_, _, _), g in groups:
-        if "time_elapsed" in g.columns:
-            g = g.sort_values("time_elapsed")
-        elif "timestamp" in g.columns:
-            g = g.sort_values("timestamp")
+        # if "time_elapsed" in g.columns:
+        #     g = g.sort_values("time_elapsed")
+        # elif "timestamp" in g.columns:
+        #     g = g.sort_values("timestamp")
 
         X_seq = g[feature_cols].to_numpy(dtype=np.float32)
 
@@ -166,8 +166,8 @@ def build_eego_lstm_sequences(
         X_seqs.append(X_seq)
         y_labels.append(y_bin)
 
-    if fixed_T is None:
-        fixed_T = max(seq.shape[0] for seq in X_seqs)
+    # if fixed_T is None:
+    #     fixed_T = max(seq.shape[0] for seq in X_seqs)
 
     n_features = X_seqs[0].shape[1]
     X_padded = np.zeros((len(X_seqs), fixed_T, n_features), dtype=np.float32)
