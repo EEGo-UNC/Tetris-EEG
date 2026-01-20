@@ -23,4 +23,4 @@ echo "Python:" "$(which python)"
 python --version
 
 export TF_FORCE_GPU_ALLOW_GROWTH=true
-python -u dreamer_models/EEGo_models.py
+python -u EEGo_models.py
