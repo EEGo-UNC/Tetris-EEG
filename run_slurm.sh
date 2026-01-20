@@ -9,13 +9,18 @@
 #SBATCH --gres=gpu:1
 
 set -euo pipefail
-
-cd /users/i/n/inserra/Tetris-EEG
-
 mkdir -p logs
+
+# Make relative paths work no matter where SLURM starts
+cd "$(dirname "$0")"
+
+module purge
+module load python/3.13
 
 source venv/bin/activate
 
-export TF_FORCE_GPU_ALLOW_GROWTH=true
+echo "Python:" "$(which python)"
+python --version
 
+export TF_FORCE_GPU_ALLOW_GROWTH=true
 python -u dreamer_models/EEGo_models.py
