@@ -11,9 +11,10 @@
 
 set -euo pipefail
 
-cd "${SLURM_SUBMIT_DIR:-$PWD}"
+SUBMIT_DIR="${SLURM_SUBMIT_DIR:-$PWD}"
+cd "$SUBMIT_DIR"
 
-LOGDIR="${SCRATCH:-$SLURM_SUBMIT_DIR}/logs"
+LOGDIR="${SCRATCH:-$SUBMIT_DIR}/logs"
 mkdir -p "$LOGDIR"
 
 echo "PWD: $(pwd)"
@@ -29,6 +30,5 @@ export TF_FORCE_GPU_ALLOW_GROWTH=true
 if [[ -n "${CUDA_HOME:-}" ]]; then
   export XLA_FLAGS="--xla_gpu_cuda_data_dir=$CUDA_HOME"
 fi
-python -u dreamer_models/EEGo_models.py
 
-# squeue -p h100_sn
+python -u dreamer_models/EEGo_models.py
