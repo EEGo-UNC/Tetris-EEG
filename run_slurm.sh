@@ -11,7 +11,7 @@
 
 set -euo pipefail
 
-cd "$SLURM_SUBMIT_DIR"
+cd "${SLURM_SUBMIT_DIR:-$PWD}"
 
 LOGDIR="${SCRATCH:-$SLURM_SUBMIT_DIR}/logs"
 mkdir -p "$LOGDIR"
@@ -21,7 +21,14 @@ echo "LOGDIR: $LOGDIR"
 
 module purge
 module load python/3.13
+module load cuda/12.9
+
 source venv/bin/activate
 
 export TF_FORCE_GPU_ALLOW_GROWTH=true
+if [[ -n "${CUDA_HOME:-}" ]]; then
+  export XLA_FLAGS="--xla_gpu_cuda_data_dir=$CUDA_HOME"
+fi
 python -u dreamer_models/EEGo_models.py
+
+# squeue -p h100_sn
