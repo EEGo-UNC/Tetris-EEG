@@ -209,24 +209,24 @@ def main() -> None:
     print(feature_cols, flush=True)
 
     # ---------------- Hyper-parameter grid ----------------
-    # param_grid = {
-    #     "lr": [1e-4, 3e-4, 1e-3],
-    #     "epochs": [100, 300, 1000],
-    #     "units": [128, 256, 512, 1024],
-    #     "batch_size": [64, 128, 256],
-    #     "patience": [20],
-    #     "fixed_T": [800, 1500, 2500],
-    # }
     param_grid = {
-        # Learning rate is usually the #1 driver of stability/speed.
-        # 1e-4 is safe; 3e-4 and 1e-3 test faster learning.
-        "lr": [1e-4],
-        "epochs": [100],
-        "units": [256, 512],
-        "batch_size": [64, 256],
+        "lr": [1e-4, 3e-4, 1e-3],
+        "epochs": [100, 300, 1000],
+        "units": [128, 256, 512, 1024],
+        "batch_size": [64, 128, 256],
         "patience": [20],
-        "fixed_T": [1200, 2500],
+        "fixed_T": [800, 1500, 2500, 3000],
     }
+    # param_grid = {
+    #     # Learning rate is usually the #1 driver of stability/speed.
+    #     # 1e-4 is safe; 3e-4 and 1e-3 test faster learning.
+    #     "lr": [1e-4],
+    #     "epochs": [100],
+    #     "units": [256, 512],
+    #     "batch_size": [64, 256],
+    #     "patience": [20],
+    #     "fixed_T": [1200, 2500],
+    # }
 
 
     # ---------------- Leave-k-out settings ----------------
@@ -380,11 +380,6 @@ def main() -> None:
             print("Best combined score so far:", f"{best_mean_score:.4f}", flush=True)
             print("Best params:", best_params, flush=True)
 
-    print("\n=============================================", flush=True)
-    print("Best EEGo leave-k-out combined score:", f"{best_mean_score:.4f}", flush=True)
-    print("Best params (with per-target summaries):", best_params, flush=True)
-    print("=============================================\n", flush=True)
-
     # Save best models as .keras (final retrain on all data)
     if best_params is not None:
         saved = retrain_and_save_best_models(
@@ -399,6 +394,12 @@ def main() -> None:
         print("\nSaved model paths:", saved, flush=True)
     else:
         print("No best_params found; skipping final retrain/save.", flush=True)
+
+
+    print("\n=============================================", flush=True)
+    print("Best EEGo leave-k-out combined score:", f"{best_mean_score:.4f}", flush=True)
+    print("Best params (with per-target summaries):", best_params, flush=True)
+    print("=============================================\n", flush=True)
 
 
 if __name__ == "__main__":
