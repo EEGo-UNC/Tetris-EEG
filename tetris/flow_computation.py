@@ -5,7 +5,7 @@ PHI_SCALE = np.pi
 FLOW_ANGLE = np.pi / 4
 
 
-def delta_s_vec(valence, arousal, activation_constant=1, centerX=3.0, centerY=3.0):
+def delta_s_vec(valence, arousal, activation_constant=1, centerX=2.6, centerY=2.6):
     """Calculate a normalized speed adjustment amplitude 'delta_s' based on valence and arousal.
     Args:
         valence (float or np.ndarray): Valence value(s) Range: [1, 5].
@@ -16,6 +16,8 @@ def delta_s_vec(valence, arousal, activation_constant=1, centerX=3.0, centerY=3.
     Returns:
         float or np.ndarray: The speed adjustment amplitude 'delta_s'. In a range approximately [-1, 1].
     """
+    if np.isnan(valence) or np.isnan(arousal):
+        return 0
 
     #Centered coordinates to center at 3,3
     x = valence - centerX

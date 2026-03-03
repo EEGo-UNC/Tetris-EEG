@@ -1,0 +1,24 @@
+Best single user split, omitting videos [2, 10, 15]
+
+
+LSTM Classification Performance (cross-subject folds)
+---------------------------------------------------
+Accuracy: 0.7780
+F1 (weighted): 0.7827
+Precision (weighted): 0.8294
+Recall (weighted): 0.7780
+Removed 14 Participants: [0, 1, 2, 5, 6, 7, 8, 9, 14, 16, 17, 19, 21, 22]
+
+Confusion Matrix (pooled):
+[[795 330]
+ [126 999]]
+
+Classification Report (pooled):
+              precision    recall  f1-score   support
+
+         0.0       0.86      0.71      0.78      1125
+         1.0       0.75      0.89      0.81      1125
+
+    accuracy                           0.80      2250
+   macro avg       0.81      0.80      0.80      2250
+weighted avg       0.81      0.80      0.80      2250

@@ -1,0 +1,38 @@
+# --- Python cache / bytecode ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*$py.class
+
+# models
+*.h5 
+
+# --- Virtual environments ---
+.venv/
+venv/
+ENV/
+env/
+
+# --- Jupyter notebooks checkpoints ---
+.ipynb_checkpoints/
+
+# --- Logs / outputs ---
+*.log
+*.out
+*.err
+
+# --- Build / packaging ---
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# --- IDE / editor files ---
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# --- Local data ---
+datasets/

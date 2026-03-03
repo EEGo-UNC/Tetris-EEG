@@ -1,0 +1,144 @@
+Best universal hyperparameters:
+{'lr': 0.001, 'epochs': 10, 'units': 512, 'batch_size': 256}
+Mean accuracy across subjects (tuning): 0.8012
+
+Held-out patient: 3 | Held-out (patient, video) trials: [(3, 2), (3, 10), (3, 15)] | Excluded users: [0, 1, 2, 4, 5, 6, 8, 9, 10, 11, 14, 16, 17, 18, 19, 22]
+
+=== Subject 3 ===
+arousal_train counts:
+ low     4286
+high    4286
+Name: count, dtype: Int64
+arousal_test counts:
+ high    143
+low     143
+Name: count, dtype: Int64
+9/9 ━━━━━━━━━━━━━━━━━━━━ 0s 20ms/step
+
+Confusion Matrix (this subject):
+[[126  17]
+ [  1 142]]
+Acc=0.9371, F1w=0.9369, Prec=0.9426, Rec=0.9371
+Held-out patient: 7 | Held-out (patient, video) trials: [(7, 2), (7, 10), (7, 15)] | Excluded users: [0, 1, 2, 4, 5, 6, 8, 9, 10, 11, 14, 16, 17, 18, 19, 22]
+
+=== Subject 7 ===
+arousal_train counts:
+ low     4286
+high    4286
+Name: count, dtype: Int64
+arousal_test counts:
+ high    143
+low     143
+Name: count, dtype: Int64
+9/9 ━━━━━━━━━━━━━━━━━━━━ 0s 19ms/step
+
+Confusion Matrix (this subject):
+[[104  39]
+ [ 26 117]]
+Acc=0.7727, F1w=0.7723, Prec=0.7750, Rec=0.7727
+Held-out patient: 12 | Held-out (patient, video) trials: [(12, 2), (12, 10), (12, 15)] | Excluded users: [0, 1, 2, 4, 5, 6, 8, 9, 10, 11, 14, 16, 17, 18, 19, 22]
+
+=== Subject 12 ===
+arousal_train counts:
+ low     4286
+high    4286
+Name: count, dtype: Int64
+arousal_test counts:
+ high    143
+low     143
+Name: count, dtype: Int64
+9/9 ━━━━━━━━━━━━━━━━━━━━ 0s 19ms/step
+
+Confusion Matrix (this subject):
+[[141   2]
+ [  0 143]]
+Acc=0.9930, F1w=0.9930, Prec=0.9931, Rec=0.9930
+Held-out patient: 13 | Held-out (patient, video) trials: [(13, 2), (13, 10), (13, 15)] | Excluded users: [0, 1, 2, 4, 5, 6, 8, 9, 10, 11, 14, 16, 17, 18, 19, 22]
+
+=== Subject 13 ===
+arousal_train counts:
+ low     4286
+high    4286
+Name: count, dtype: Int64
+arousal_test counts:
+ high    143
+low     143
+Name: count, dtype: Int64
+9/9 ━━━━━━━━━━━━━━━━━━━━ 0s 18ms/step
+
+Confusion Matrix (this subject):
+[[ 21 122]
+ [ 12 131]]
+Acc=0.5315, F1w=0.4501, Prec=0.5771, Rec=0.5315
+Held-out patient: 15 | Held-out (patient, video) trials: [(15, 2), (15, 10), (15, 15)] | Excluded users: [0, 1, 2, 4, 5, 6, 8, 9, 10, 11, 14, 16, 17, 18, 19, 22]
+
+=== Subject 15 ===
+arousal_train counts:
+ low     4286
+high    4286
+Name: count, dtype: Int64
+arousal_test counts:
+ high    143
+low     143
+Name: count, dtype: Int64
+9/9 ━━━━━━━━━━━━━━━━━━━━ 0s 19ms/step
+
+Confusion Matrix (this subject):
+[[131  12]
+ [  3 140]]
+Acc=0.9476, F1w=0.9475, Prec=0.9493, Rec=0.9476
+Held-out patient: 20 | Held-out (patient, video) trials: [(20, 2), (20, 10), (20, 15)] | Excluded users: [0, 1, 2, 4, 5, 6, 8, 9, 10, 11, 14, 16, 17, 18, 19, 22]
+
+=== Subject 20 ===
+arousal_train counts:
+ low     4286
+high    4286
+Name: count, dtype: Int64
+arousal_test counts:
+ high    143
+low     143
+Name: count, dtype: Int64
+9/9 ━━━━━━━━━━━━━━━━━━━━ 0s 18ms/step
+
+Confusion Matrix (this subject):
+[[125  18]
+ [  0 143]]
+Acc=0.9371, F1w=0.9368, Prec=0.9441, Rec=0.9371
+Held-out patient: 21 | Held-out (patient, video) trials: [(21, 2), (21, 10), (21, 15)] | Excluded users: [0, 1, 2, 4, 5, 6, 8, 9, 10, 11, 14, 16, 17, 18, 19, 22]
+
+=== Subject 21 ===
+arousal_train counts:
+ low     4286
+high    4286
+Name: count, dtype: Int64
+arousal_test counts:
+ high    143
+low     143
+Name: count, dtype: Int64
+9/9 ━━━━━━━━━━━━━━━━━━━━ 0s 19ms/step
+
+Confusion Matrix (this subject):
+[[139   4]
+ [142   1]]
+Acc=0.4895, F1w=0.3346, Prec=0.3473, Rec=0.4895
+
+LSTM Classification Performance (cross-subject folds, best universal hyperparams)
+---------------------------------------------------
+Accuracy: 0.8012
+F1 (weighted): 0.7673
+Precision (weighted): 0.7898
+Recall (weighted): 0.8012
+
+Confusion Matrix (pooled):
+[[787 214]
+ [184 817]]
+
+Classification Report (pooled):
+              precision    recall  f1-score   support
+
+         0.0       0.81      0.79      0.80      1001
+         1.0       0.79      0.82      0.80      1001
+
+    accuracy                           0.80      2002
+   macro avg       0.80      0.80      0.80      2002
+weighted avg       0.80      0.80      0.80      2002

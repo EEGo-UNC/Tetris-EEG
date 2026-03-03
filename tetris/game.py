@@ -21,7 +21,7 @@ class Game:
         self.game_over = False
         self.isolated_empty_sum = 0
         self.isolated_empty_count = 0
-        self.fall_speed = 600  # Initial fall speed in milliseconds
+        self.fall_speed = 450  # Initial fall speed in milliseconds
         self.difficulty_level = difficulty_level  #For logging purposes, will not change during game
     def update_isolated_empty(self):
         val = self.board.count_isolated_empty()

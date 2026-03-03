@@ -1,13 +1,21 @@
 from __future__ import annotations
 import numpy as np
 import matplotlib.pyplot as plt
-from typing import Optional, Sequence, Tuple, Union
+from typing import Optional, Sequence, Tuple, Union, Set
 from typing import Iterable, List, Dict
 import pandas as pd
 import numpy as np
 from pathlib import Path
 from itertools import chain, combinations, product
 import re
+
+_PSD_RE = re.compile(
+    r"^(?P<ch>[A-Z0-9]+)_(?P<band>delta|theta|alpha|betaL|betaH|gamma)$"
+)
+_ENT_RE = re.compile(r"^(?P<ch>[A-Z0-9]+)_entropy$")
+_PAIR_RE = re.compile(
+    r"^(?P<ch1>[A-Z0-9]+)_(?P<ch2>[A-Z0-9]+)_(?P<band>delta|theta|alpha|betaL|betaH|gamma)_(?P<kind>da|ra)$"
+)
 
 
 def read_table(filename: str = "datasets/features_table.csv") -> pd.DataFrame:
@@ -124,6 +132,71 @@ def important_features_list(
     return df["feature"].to_list()
 
 
+def filter_features(
+    features: Iterable[str],
+    *,
+    remove_channels: Optional[Iterable[str]] = None,  # e.g., ["AF3","F7"]
+    remove_bands: Optional[Iterable[str]] = None,  # e.g., ["gamma","betaH"]
+    remove_types: Optional[
+        Iterable[str]
+    ] = None,  # any of {"psd","entropy","da","ra","pair","pair_da","pair_ra"}
+    remove_pairs_with_channels: Optional[
+        Iterable[str]
+    ] = None,  # drop any pair feature involving any of these channels
+) -> List[str]:
+    chans: Set[str] = set(map(str.upper, remove_channels or []))
+    pbands: Set[str] = set(remove_bands or [])
+    ptypes: Set[str] = set((remove_types or []))
+    pair_chans: Set[str] = set(map(str.upper, remove_pairs_with_channels or []))
+
+    def should_drop(feat: str) -> bool:
+        f = feat.strip()
+
+        m = _PAIR_RE.match(f)
+        if m:
+            ch1, ch2 = m["ch1"].upper(), m["ch2"].upper()
+            band, kind = m["band"], m["kind"]  # kind in {"da","ra"}
+
+            if ch1 in chans or ch2 in chans:
+                return True
+            if pair_chans and (ch1 in pair_chans or ch2 in pair_chans):
+                return True
+            if band in pbands:
+                return True
+            if "pair" in ptypes:
+                return True
+            if kind in ptypes or f"pair_{kind}" in ptypes:
+                return True
+            return False
+
+        # Entropy: CH_entropy
+        m = _ENT_RE.match(f)
+        if m:
+            ch = m["ch"].upper()
+            if ch in chans:
+                return True
+            if "entropy" in ptypes:
+                return True
+            return False
+
+        # Single-channel PSD: CH_band
+        m = _PSD_RE.match(f)
+        if m:
+            ch, band = m["ch"].upper(), m["band"]
+            if ch in chans:
+                return True
+            if band in pbands:
+                return True
+            if "psd" in ptypes:
+                return True
+            return False
+
+        # If it doesn't match known schemas, keep it.
+        return False
+
+    return [f for f in features if not should_drop(f)]
+
+
 # Homologous left–right pairs for Emotiv/DREAMER (14ch)
 HOMOLOGOUS_PAIRS = [
     ("AF3", "AF4"),
@@ -179,7 +252,7 @@ def compute_asymmetry_from_psd(
     return pd.DataFrame(out_cols, index=psd.index)
 
 
-def plot_regressor_accuracy(y_true, y_pred, size_increment=0.5, title=None):
+def plot_regressor_accuracy(y_true, y_pred, size_increment=5, title=None):
 
     fig, ax = plt.subplots(figsize=(5, 5))
 
@@ -194,11 +267,8 @@ def plot_regressor_accuracy(y_true, y_pred, size_increment=0.5, title=None):
     for i in range(len(y_true)):
         s.append(size[(y_pred[i], y_true[i])])
 
-
     ax.scatter(y_true, y_pred, s=s, alpha=0.7, edgecolors="none")
-    ax.plot(
-        [1, 2, 3, 4, 5], [1, 2, 3, 4, 5], c="blue", linestyle="--", linewidth=2
-    )
+    ax.plot([1, 2, 3, 4, 5], [1, 2, 3, 4, 5], c="blue", linestyle="--", linewidth=2)
 
     ax.set_aspect("equal", "box")
     ax.set_xlabel("y_true")

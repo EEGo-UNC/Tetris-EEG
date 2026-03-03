@@ -56,19 +56,6 @@ def predict_n_insert(
 ):
     check_tick_time = time.time() 
     session_id = get_global_session_id()
-    save_eeg_data(
-        "dreamer_model/datasets/curr_sesh.csv",
-        user_id,
-        session_id,
-        object_count,
-        time_elapsed,
-        arousal,
-        valence,
-        fall_speed,
-        difficulty_type,
-        EpocX.sensor_contact_quality,
-        EpocX.pow_data_batch,
-    )
     featurized_batch = featurize_cur_sesh_psd(
         user_id,
         session_id,
@@ -82,7 +69,19 @@ def predict_n_insert(
         EpocX.pow_data_batch,
     )
     arousal, valence = predict_flow(featurized_batch)
-    print(arousal, valence)
+    save_eeg_data(
+        "dreamer_models/datasets/curr_sesh.csv",
+        user_id,
+        session_id,
+        object_count,
+        time_elapsed,
+        arousal,
+        valence,
+        fall_speed,
+        difficulty_type,
+        EpocX.sensor_contact_quality,
+        EpocX.pow_data_batch,
+    )
     
     EpocX.pow_data_batch.drop(EpocX.pow_data_batch.index, inplace=True)
     print("Prediction time:", time.time() - check_tick_time)

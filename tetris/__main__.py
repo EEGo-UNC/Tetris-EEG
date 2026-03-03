@@ -5,6 +5,11 @@ from .difficulties import *
 from .game import Game
 from experiment import experiment as exp
 import time
+import os
+import random
+
+seed_value = int.from_bytes(os.urandom(8), byteorder='big')
+random.seed(seed_value)
 
 pygame.init()
 screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -14,11 +19,10 @@ font = pygame.font.SysFont("Arial", 24)
 clock = pygame.time.Clock()
 
 difficulties = [
-    # increase_difficulty_lines_cleared,
+    #increase_difficulty_lines_cleared,
     # constant_difficulty,
     # increase_difficulty_adaptive,
     # increase_difficulty_blocks_placed,
-    #increase_difficulty_flow,
     increase_difficulty_minimize_emotion_distance
 ]
 
@@ -75,7 +79,7 @@ def main():
     exp.EpocX.pow_data_batch.drop(exp.EpocX.pow_data_batch.index, inplace=True)
 
     fall_time = 0
-    fall_speed = 600  # ms
+    fall_speed = 450  # ms
     min_fall_speed = 50  # ms
     running = True
     move_delay = 80  # ms between moves when holding
@@ -157,7 +161,7 @@ def main():
     while True:
         save_session_recordings = input("Do you want to save session recordings? [Y/N] ")
         if save_session_recordings.lower() == "y":
-            exp.save_curr_sesh("dreamer_model/datasets/EEGO.csv", "dreamer_model/datasets/curr_sesh.csv")
+            exp.save_curr_sesh("dreamer_models/datasets/EEGO.csv", "dreamer_models/datasets/curr_sesh.csv")
             break
         elif save_session_recordings.lower() == "n":
             sure = input("Are you sure?[Y/N] ")

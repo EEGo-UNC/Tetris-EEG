@@ -1,0 +1,239 @@
+Starting global hyperparameter search...
+
+Held-out patient: 0 | Held-out (patient, video) trials: [(0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (0, 5), (0, 6), (0, 7), (0, 8), (0, 9), (0, 10), (0, 11), (0, 12), (0, 13), (0, 14), (0, 15), (0, 16), (0, 17)] | Excluded users: []
+y_train counts: [220 176]
+y_test counts: [13  5]
+X_train_arr shape: (396, 196, 452)
+1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 821ms/step
+0.6666666666666666
+
+Confusion Matrix (subject):
+[[11  2]
+ [ 4  1]]
+Held-out patient: 1 | Held-out (patient, video) trials: [(1, 0), (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (1, 9), (1, 10), (1, 11), (1, 12), (1, 13), (1, 14), (1, 15), (1, 16), (1, 17)] | Excluded users: []
+y_train counts: [224 172]
+y_test counts: [9 9]
+X_train_arr shape: (396, 196, 452)
+1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 991ms/step
+0.6666666666666666
+
+Confusion Matrix (subject):
+[[9 0]
+ [6 3]]
+Held-out patient: 2 | Held-out (patient, video) trials: [(2, 0), (2, 1), (2, 2), (2, 3), (2, 4), (2, 5), (2, 6), (2, 7), (2, 8), (2, 9), (2, 10), (2, 11), (2, 12), (2, 13), (2, 14), (2, 15), (2, 16), (2, 17)] | Excluded users: []
+y_train counts: [222 174]
+y_test counts: [11  7]
+X_train_arr shape: (396, 196, 452)
+1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 842ms/step
+0.7777777777777778
+
+Confusion Matrix (subject):
+[[11  0]
+ [ 4  3]]
+Held-out patient: 3 | Held-out (patient, video) trials: [(3, 0), (3, 1), (3, 2), (3, 3), (3, 4), (3, 5), (3, 6), (3, 7), (3, 8), (3, 9), (3, 10), (3, 11), (3, 12), (3, 13), (3, 14), (3, 15), (3, 16), (3, 17)] | Excluded users: []
+y_train counts: [220 176]
+y_test counts: [13  5]
+X_train_arr shape: (396, 196, 452)
+1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 811ms/step
+0.7777777777777778
+
+Confusion Matrix (subject):
+[[12  1]
+ [ 3  2]]
+Held-out patient: 4 | Held-out (patient, video) trials: [(4, 0), (4, 1), (4, 2), (4, 3), (4, 4), (4, 5), (4, 6), (4, 7), (4, 8), (4, 9), (4, 10), (4, 11), (4, 12), (4, 13), (4, 14), (4, 15), (4, 16), (4, 17)] | Excluded users: []
+y_train counts: [223 173]
+y_test counts: [10  8]
+X_train_arr shape: (396, 196, 452)
+WARNING:tensorflow:5 out of the last 5 calls to <function TensorFlowTrainer.make_predict_function.<locals>.one_step_on_data_distributed at 0x17cdf6d40> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 884ms/step
+0.7222222222222222
+
+Confusion Matrix (subject):
+[[10  0]
+ [ 5  3]]
+Held-out patient: 5 | Held-out (patient, video) trials: [(5, 0), (5, 1), (5, 2), (5, 3), (5, 4), (5, 5), (5, 6), (5, 7), (5, 8), (5, 9), (5, 10), (5, 11), (5, 12), (5, 13), (5, 14), (5, 15), (5, 16), (5, 17)] | Excluded users: []
+y_train counts: [227 169]
+y_test counts: [ 6 12]
+X_train_arr shape: (396, 196, 452)
+WARNING:tensorflow:6 out of the last 6 calls to <function TensorFlowTrainer.make_predict_function.<locals>.one_step_on_data_distributed at 0x293885f30> triggered tf.function retracing. Tracing is expensive and the excessive number of tracings could be due to (1) creating @tf.function repeatedly in a loop, (2) passing tensors with different shapes, (3) passing Python objects instead of tensors. For (1), please define your @tf.function outside of the loop. For (2), @tf.function has reduce_retracing=True option that can avoid unnecessary retracing. For (3), please refer to https://www.tensorflow.org/guide/function#controlling_retracing and https://www.tensorflow.org/api_docs/python/tf/function for  more details.
+1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 850ms/step
+0.5
+
+Confusion Matrix (subject):
+[[6 0]
+ [9 3]]
+Held-out patient: 6 | Held-out (patient, video) trials: [(6, 0), (6, 1), (6, 2), (6, 3), (6, 4), (6, 5), (6, 6), (6, 7), (6, 8), (6, 9), (6, 10), (6, 11), (6, 12), (6, 13), (6, 14), (6, 15), (6, 16), (6, 17)] | Excluded users: []
+y_train counts: [222 174]
+y_test counts: [11  7]
+X_train_arr shape: (396, 196, 452)
+1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 853ms/step
+0.5555555555555556
+
+Confusion Matrix (subject):
+[[9 2]
+ [6 1]]
+Held-out patient: 7 | Held-out (patient, video) trials: [(7, 0), (7, 1), (7, 2), (7, 3), (7, 4), (7, 5), (7, 6), (7, 7), (7, 8), (7, 9), (7, 10), (7, 11), (7, 12), (7, 13), (7, 14), (7, 15), (7, 16), (7, 17)] | Excluded users: []
+y_train counts: [220 176]
+y_test counts: [13  5]
+X_train_arr shape: (396, 196, 452)
+1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 840ms/step
+0.6666666666666666
+
+Confusion Matrix (subject):
+[[11  2]
+ [ 4  1]]
+Held-out patient: 8 | Held-out (patient, video) trials: [(8, 0), (8, 1), (8, 2), (8, 3), (8, 4), (8, 5), (8, 6), (8, 7), (8, 8), (8, 9), (8, 10), (8, 11), (8, 12), (8, 13), (8, 14), (8, 15), (8, 16), (8, 17)] | Excluded users: []
+y_train counts: [228 168]
+y_test counts: [ 5 13]
+X_train_arr shape: (396, 196, 452)
+1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 864ms/step
+0.6666666666666666
+
+Confusion Matrix (subject):
+[[ 1  4]
+ [ 2 11]]
+Held-out patient: 9 | Held-out (patient, video) trials: [(9, 0), (9, 1), (9, 2), (9, 3), (9, 4), (9, 5), (9, 6), (9, 7), (9, 8), (9, 9), (9, 10), (9, 11), (9, 12), (9, 13), (9, 14), (9, 15), (9, 16), (9, 17)] | Excluded users: []
+y_train counts: [222 174]
+y_test counts: [11  7]
+X_train_arr shape: (396, 196, 452)
+1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 818ms/step
+0.5555555555555556
+
+Confusion Matrix (subject):
+[[9 2]
+ [6 1]]
+Held-out patient: 10 | Held-out (patient, video) trials: [(10, 0), (10, 1), (10, 2), (10, 3), (10, 4), (10, 5), (10, 6), (10, 7), (10, 8), (10, 9), (10, 10), (10, 11), (10, 12), (10, 13), (10, 14), (10, 15), (10, 16), (10, 17)] | Excluded users: []
+y_train counts: [222 174]
+y_test counts: [11  7]
+X_train_arr shape: (396, 196, 452)
+1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 833ms/step
+0.7777777777777778
+
+Confusion Matrix (subject):
+[[11  0]
+ [ 4  3]]
+Held-out patient: 11 | Held-out (patient, video) trials: [(11, 0), (11, 1), (11, 2), (11, 3), (11, 4), (11, 5), (11, 6), (11, 7), (11, 8), (11, 9), (11, 10), (11, 11), (11, 12), (11, 13), (11, 14), (11, 15), (11, 16), (11, 17)] | Excluded users: []
+y_train counts: [223 173]
+y_test counts: [10  8]
+X_train_arr shape: (396, 196, 452)
+1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 828ms/step
+0.6111111111111112
+
+Confusion Matrix (subject):
+[[9 1]
+ [6 2]]
+Held-out patient: 12 | Held-out (patient, video) trials: [(12, 0), (12, 1), (12, 2), (12, 3), (12, 4), (12, 5), (12, 6), (12, 7), (12, 8), (12, 9), (12, 10), (12, 11), (12, 12), (12, 13), (12, 14), (12, 15), (12, 16), (12, 17)] | Excluded users: []
+y_train counts: [223 173]
+y_test counts: [10  8]
+X_train_arr shape: (396, 196, 452)
+1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 828ms/step
+0.7222222222222222
+
+Confusion Matrix (subject):
+[[10  0]
+ [ 5  3]]
+Held-out patient: 13 | Held-out (patient, video) trials: [(13, 0), (13, 1), (13, 2), (13, 3), (13, 4), (13, 5), (13, 6), (13, 7), (13, 8), (13, 9), (13, 10), (13, 11), (13, 12), (13, 13), (13, 14), (13, 15), (13, 16), (13, 17)] | Excluded users: []
+y_train counts: [221 175]
+y_test counts: [12  6]
+X_train_arr shape: (396, 196, 452)
+1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 833ms/step
+0.7222222222222222
+
+Confusion Matrix (subject):
+[[11  1]
+ [ 4  2]]
+Held-out patient: 14 | Held-out (patient, video) trials: [(14, 0), (14, 1), (14, 2), (14, 3), (14, 4), (14, 5), (14, 6), (14, 7), (14, 8), (14, 9), (14, 10), (14, 11), (14, 12), (14, 13), (14, 14), (14, 15), (14, 16), (14, 17)] | Excluded users: []
+y_train counts: [224 172]
+y_test counts: [9 9]
+X_train_arr shape: (396, 196, 452)
+1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 817ms/step
+0.5555555555555556
+
+Confusion Matrix (subject):
+[[8 1]
+ [7 2]]
+Held-out patient: 15 | Held-out (patient, video) trials: [(15, 0), (15, 1), (15, 2), (15, 3), (15, 4), (15, 5), (15, 6), (15, 7), (15, 8), (15, 9), (15, 10), (15, 11), (15, 12), (15, 13), (15, 14), (15, 15), (15, 16), (15, 17)] | Excluded users: []
+y_train counts: [223 173]
+y_test counts: [10  8]
+X_train_arr shape: (396, 196, 452)
+1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 931ms/step
+0.7222222222222222
+
+Confusion Matrix (subject):
+[[10  0]
+ [ 5  3]]
+Held-out patient: 16 | Held-out (patient, video) trials: [(16, 0), (16, 1), (16, 2), (16, 3), (16, 4), (16, 5), (16, 6), (16, 7), (16, 8), (16, 9), (16, 10), (16, 11), (16, 12), (16, 13), (16, 14), (16, 15), (16, 16), (16, 17)] | Excluded users: []
+y_train counts: [220 176]
+y_test counts: [13  5]
+X_train_arr shape: (396, 196, 452)
+1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 973ms/step
+0.6666666666666666
+
+Confusion Matrix (subject):
+[[11  2]
+ [ 4  1]]
+Held-out patient: 17 | Held-out (patient, video) trials: [(17, 0), (17, 1), (17, 2), (17, 3), (17, 4), (17, 5), (17, 6), (17, 7), (17, 8), (17, 9), (17, 10), (17, 11), (17, 12), (17, 13), (17, 14), (17, 15), (17, 16), (17, 17)] | Excluded users: []
+y_train counts: [224 172]
+y_test counts: [9 9]
+X_train_arr shape: (396, 196, 452)
+1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 857ms/step
+0.6666666666666666
+
+Confusion Matrix (subject):
+[[9 0]
+ [6 3]]
+Held-out patient: 18 | Held-out (patient, video) trials: [(18, 0), (18, 1), (18, 2), (18, 3), (18, 4), (18, 5), (18, 6), (18, 7), (18, 8), (18, 9), (18, 10), (18, 11), (18, 12), (18, 13), (18, 14), (18, 15), (18, 16), (18, 17)] | Excluded users: []
+y_train counts: [229 167]
+y_test counts: [ 4 14]
+X_train_arr shape: (396, 196, 452)
+1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 720ms/step
+0.6111111111111112
+
+Confusion Matrix (subject):
+[[ 0  4]
+ [ 3 11]]
+Held-out patient: 19 | Held-out (patient, video) trials: [(19, 0), (19, 1), (19, 2), (19, 3), (19, 4), (19, 5), (19, 6), (19, 7), (19, 8), (19, 9), (19, 10), (19, 11), (19, 12), (19, 13), (19, 14), (19, 15), (19, 16), (19, 17)] | Excluded users: []
+y_train counts: [221 175]
+y_test counts: [12  6]
+X_train_arr shape: (396, 196, 452)
+1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 749ms/step
+0.7222222222222222
+
+Confusion Matrix (subject):
+[[11  1]
+ [ 4  2]]
+Held-out patient: 20 | Held-out (patient, video) trials: [(20, 0), (20, 1), (20, 2), (20, 3), (20, 4), (20, 5), (20, 6), (20, 7), (20, 8), (20, 9), (20, 10), (20, 11), (20, 12), (20, 13), (20, 14), (20, 15), (20, 16), (20, 17)] | Excluded users: []
+y_train counts: [226 170]
+y_test counts: [ 7 11]
+X_train_arr shape: (396, 196, 452)
+1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 738ms/step
+0.5555555555555556
+
+Confusion Matrix (subject):
+[[7 0]
+ [8 3]]
+Held-out patient: 21 | Held-out (patient, video) trials: [(21, 0), (21, 1), (21, 2), (21, 3), (21, 4), (21, 5), (21, 6), (21, 7), (21, 8), (21, 9), (21, 10), (21, 11), (21, 12), (21, 13), (21, 14), (21, 15), (21, 16), (21, 17)] | Excluded users: []
+y_train counts: [221 175]
+y_test counts: [12  6]
+X_train_arr shape: (396, 196, 452)
+1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 704ms/step
+0.7222222222222222
+
+Confusion Matrix (subject):
+[[11  1]
+ [ 4  2]]
+Held-out patient: 22 | Held-out (patient, video) trials: [(22, 0), (22, 1), (22, 2), (22, 3), (22, 4), (22, 5), (22, 6), (22, 7), (22, 8), (22, 9), (22, 10), (22, 11), (22, 12), (22, 13), (22, 14), (22, 15), (22, 16), (22, 17)] | Excluded users: []
+y_train counts: [221 175]
+y_test counts: [12  6]
+X_train_arr shape: (396, 196, 452)
+1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 731ms/step
+0.6111111111111112
+
+Confusion Matrix (subject):
+[[10  2]
+ [ 5  1]]
+Params lr=0.0001, epochs=100, units=512, batch_size=128 -> mean acc across subjects = 0.6618
+
+Best universal hyperparameters:
+{'lr': 0.0001, 'epochs': 100, 'units': 512, 'batch_size': 128}
+Mean accuracy across subjects (tuning): 0.6618

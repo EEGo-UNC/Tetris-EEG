@@ -3,25 +3,40 @@
 Python 3.10+, NumPy/Pandas, SciPy, scikit-learn, MNE (for ICA), PyTorch (RF variant), Matplotlib.
 
 ```
-dreamer_model/
-├─ datasets/              # Raw/processed DREAMER CSVs (local only)
+dreamer_models/
+├─ best_tests/
+│   ├─ best_all_user_LOSO.txt
+│   ├─ best_LOO.txt
+│   ├─ best_result_single_user_split.txt
+│   └─ single_user_LOO_no_drops.txt
+│
+├─ datasets/                     # Raw/processed DREAMER CSVs (local only)
+│
+├─ dreamer_extraction/
+│   └─ start_dreamer.ipynb       # DREAMER parsing/setup notebook
+│
 ├─ ML/
-│  ├─ ICA.py              # EEG-only ICA helpers for artifact removal
-│  ├─ model_training.py   # Train/eval utilities, splits, metrics, saves
-│  ├─ rf_torch.py         # PyTorch Random Forest wrapper/impl
-│  └─ utils.py            # Filtering, subsets, asymmetry features
-├─ features.ipynb         # Generates feature tables
-├─ predictor_model.ipynb  # Trains model for in-game prediction (imported in tetris)
-├─ run_models.ipynb       # ML model walkthrough
-└─ start_dreamer.ipynb    # Sets up dreamer
+│   ├─ __init__.py
+│   ├─ features.ipynb            # Feature generation notebook
+│   ├─ ICA.py                    # EEG-only ICA helpers for artifact removal
+│   ├─ labels.py                 # Label parsing and relabel helpers
+│   ├─ model_testing.ipynb       # Result validation / confusion matrices
+│   ├─ model_training.py         # Training utilities, splits, metrics, saves
+│   ├─ splits.py                 # Group splits for DREAMER (LOO, omit video, etc.)
+│   ├─ STSNet.py                 # Experimental STSNet architecture
+│   ├─ utils.py                  # Filtering, loading, subsets, asymmetry features
+│   └─ __pycache__/              # Auto-generated cache
+│
+├─ experiment_models.ipynb       # LOSO PSD only + fine-tuning
+├─ LOSO_models.ipynb              # Leave-One-User-Out  + fine-tuning
+├─ predictor_model.py            # Model used for real-time/in-game predictions
+├─ README.md
+└─ single_user_models.ipynb      # Per-user or subject-specific modeling
+
 ```
 
 ## predictor_model.py
-This script trains a model that can be imported by other parts of this project, namely, in the `experiment` portion. The script runs:
-```py
-arousal_model, X_test, y_test = train_knn(X, None, arousal_target, None, neighbors=best_n)
-valence_model, X_test, y_test = train_knn(X, None, valence_target, None, neighbors=best_n)
-```
+This script trains a model that can be imported by other parts of this project, namely, in the `experiment` portion. The script trains, saves, and gets lstm model as `.keras` file.
 Then, `arousal_model` and `valence_model` can be imported to do in-game speed change predictions over the real-time collected EEG data.
 
 
