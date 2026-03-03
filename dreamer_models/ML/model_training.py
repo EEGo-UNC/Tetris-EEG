@@ -182,7 +182,6 @@ def build_eego_lstm_sequences(
     y_arr = np.asarray(y_labels, dtype=np.float32)
     return X_padded, y_arr
 
-
 def train_lstm(
     X_train: pd.DataFrame | np.ndarray,
     X_test: pd.DataFrame | np.ndarray,
@@ -199,6 +198,10 @@ def train_lstm(
     patience: int = 8,
     verbose: int = 0,
     random_seed: int = 42,
+    # NEW:
+    X_val: pd.DataFrame | np.ndarray | None = None,
+    y_val: pd.Series | pd.DataFrame | np.ndarray | None = None,
+    validation_split: float = 0.15,  # used only if X_val/y_val not provided
 ):
     if random_seed is not None:
         tf.keras.utils.set_random_seed(random_seed)
@@ -208,7 +211,7 @@ def train_lstm(
     y_train_arr = np.asarray(y_train)
 
     # Handle labels flexibly: numeric 0/1 or "high"/"low"
-    if y_train_arr.dtype.kind in "ifu":  # int/float
+    if y_train_arr.dtype.kind in "ifu":
         y_train_arr = y_train_arr.astype(np.float32)
     else:
         y_train_arr = np.array(
@@ -229,9 +232,7 @@ def train_lstm(
         y_test_arr = None
 
     if X_train_arr.ndim != 3:
-        raise ValueError(
-            f"X_train must be 3D (trials, timesteps, features), got {X_train_arr.shape}"
-        )
+        raise ValueError(f"X_train must be 3D (trials, timesteps, features), got {X_train_arr.shape}")
 
     timesteps = X_train_arr.shape[1]
     n_features = X_train_arr.shape[2]
@@ -244,13 +245,6 @@ def train_lstm(
         return_sequences=False,
     )
     x = layers.Bidirectional(lstm_block)(inp) if bidirectional else lstm_block(inp)
-    # lstm_block2 = layers.LSTM(
-    #     units,
-    #     dropout=dropout,
-    #     recurrent_dropout=recurrent_dropout,
-    #     return_sequences=False,
-    # )
-    # x = layers.Bidirectional(lstm_block2)(x) if bidirectional else lstm_block2(x)
     x = layers.Dense(units // 2, activation="leaky_relu")(x)
     x = layers.Dropout(dropout)(x)
     out = layers.Dense(1, activation="sigmoid")(x)
@@ -278,16 +272,27 @@ def train_lstm(
         ),
     ]
 
-    model.fit(
-        X_train_arr,
-        y_train_arr,
+    fit_kwargs = dict(
         epochs=epochs,
-        validation_split=0.15,
         batch_size=batch_size,
         verbose=verbose,
         callbacks=cbs,
         shuffle=False,
     )
+
+    if X_val is not None and y_val is not None:
+        X_val_arr = np.asarray(X_val).astype(np.float32, copy=False)
+        y_val_arr = np.asarray(y_val)
+        if y_val_arr.dtype.kind in "ifu":
+            y_val_arr = y_val_arr.astype(np.float32)
+        else:
+            y_val_arr = np.array(
+                [1.0 if str(v).lower() == "high" else 0.0 for v in y_val_arr],
+                dtype=np.float32,
+            )
+        model.fit(X_train_arr, y_train_arr, validation_data=(X_val_arr, y_val_arr), **fit_kwargs)
+    else:
+        model.fit(X_train_arr, y_train_arr, validation_split=validation_split, **fit_kwargs)
 
     return model, X_test_arr, y_test_arr
 
