@@ -1,6 +1,6 @@
 # Tetris-EEG
 
-This repository contains code to run an adaptation of Tetris that dynamically changes the game speed based on Machine Learning predictions of the user's current Arousal and Valence every 4 seconds. This project was originally built to run an experiment called EEGoFeedback: Dynamic Flow Maintenance through Real-time EEG Emotion Prediction.
+This repository contains code to run an adaptation of Tetris that dynamically changes the game speed based on Machine Learning predictions of the user's current Arousal and Valence. This project was originally built to run an experiment called EEGoFeedback: Dynamic Flow Maintenance through Real-time EEG Emotion Prediction.
 
 Repo Structure:
 ```
@@ -13,7 +13,8 @@ Repo Structure:
 |   └── run_models.ipynb    # notebook to compile all models
 ├── experiment
 |   ├── EpocX   # contains code to get and manipulate data from EEG
-|   ├── experiment.py   # functions for syncing EEG data with game
+|   ├── Muse   # contains code to get and manipulate data from EEG
+|   ├── experiment_muse.py   # functions for syncing EEG data with game
 └── tetris
     └── main.py
 ```
@@ -28,8 +29,14 @@ pip install -r requirements.txt
 ## Playing the game/Data Collection
 Current tetris implementation only tested with Python 3.13.7
 
-To play the game, set the current working directory to Tetris-EEG/tetris, then run main.py. Make sure that an Emotiv EPOC X headset is close by and powered on.
+To play the game, set the current working directory to Tetris-EEG/tetris, then run main.py. Make sure that a Muse EEG headset is close by and powered on.
 
+First run:
+```
+muselsl stream
+```
+
+After streaming is up and running, run:
 ```zsh
 python -m tetris
 ```
@@ -44,28 +51,3 @@ python -m tetris
 | Down Arrow | Soft Drop | Increases fall speed of the current piece |
 | Space | Hard Drop | Instantly lands and locks current piece |
 | C | Hold/Swap | Stashes current piece in the Hold cell, swaps with piece in hold cell if available |
-
-
-
-## EEG Prediction Module
-
-This repository also contains a dedicated subproject for **EEG-based emotion recognition** in the directory `EEG Prediction`.
-
-Inside, you'll find:
-- **notebooks/** → experiments with classical ML and deep learning models (MLP, MIL, LSTM, ANN/SVM/RF/KNN)
-  - **Feature Importance Analysis** → comprehensive analysis to identify which EEG features most impact valence/arousal prediction
-  - **Filtered Dataset Creation** → generate optimized datasets with only the most important features
-- **scripts/** → reusable Python scripts for baselines and dataset utilities
-- **datasets/** → expected DEAP dataset structure (not included, must be downloaded separately)
-  - **filtered_features/** → reduced feature sets for faster training and better interpretability
-- **requirements.txt** → dependencies for running notebooks and scripts
-
-### Key Features
-- Multiple ML/DL approaches for emotion recognition (valence & arousal)
-- Support for both **DEAP** and **DREAMER** datasets
-- Comprehensive feature importance analysis using 5 different methods
-- Pre-filtered datasets with top N important features (configurable)
-- Visualizations for feature rankings, frequency bands, and brain regions
-- Automatic merging of DREAMER feature files (features_table + IMF features)
-
-Please read the [EEG Prediction README](EEG%20Prediction/README.md) before running experiments or submitting changes.
