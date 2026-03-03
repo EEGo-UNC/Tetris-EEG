@@ -1,0 +1,40 @@
+PWD: /users/i/n/inserra/Tetris-EEG
+LOGDIR: /users/i/n/inserra/Tetris-EEG/logs
+GPUs: [PhysicalDevice(name='/physical_device:GPU:0', device_type='GPU')]
+Starting EEGo LSTM CV script...
+EEGo shape: (58628, 84)
+Number of sessions: 20
+affect_emotion
+E    22092
+A    15277
+R    11950
+B     9309
+Name: count, dtype: int64
+Arousal Baseline: 0.6373916899774852
+Valence Baseline: 0.580644060858293
+n_features: 126
+['AF3_theta', 'AF3_alpha', 'AF3_betaL', 'AF3_betaH', 'AF3_gamma', 'F7_theta', 'F7_alpha', 'F7_betaL', 'F7_betaH', 'F7_gamma', 'F3_theta', 'F3_alpha', 'F3_betaL', 'F3_betaH', 'F3_gamma', 'FC5_theta', 'FC5_alpha', 'FC5_betaL', 'FC5_betaH', 'FC5_gamma', 'T7_theta', 'T7_alpha', 'T7_betaL', 'T7_betaH', 'T7_gamma', 'P7_theta', 'P7_alpha', 'P7_betaL', 'P7_betaH', 'P7_gamma', 'O1_theta', 'O1_alpha', 'O1_betaL', 'O1_betaH', 'O1_gamma', 'O2_theta', 'O2_alpha', 'O2_betaL', 'O2_betaH', 'O2_gamma', 'P8_theta', 'P8_alpha', 'P8_betaL', 'P8_betaH', 'P8_gamma', 'T8_theta', 'T8_alpha', 'T8_betaL', 'T8_betaH', 'T8_gamma', 'FC6_theta', 'FC6_alpha', 'FC6_betaL', 'FC6_betaH', 'FC6_gamma', 'F4_theta', 'F4_alpha', 'F4_betaL', 'F4_betaH', 'F4_gamma', 'F8_theta', 'F8_alpha', 'F8_betaL', 'F8_betaH', 'F8_gamma', 'AF4_theta', 'AF4_alpha', 'AF4_betaL', 'AF4_betaH', 'AF4_gamma', 'AF3_entropy', 'F7_entropy', 'F3_entropy', 'FC5_entropy', 'T7_entropy', 'P7_entropy', 'O1_entropy', 'O2_entropy', 'P8_entropy', 'T8_entropy', 'FC6_entropy', 'F4_entropy', 'F8_entropy', 'AF4_entropy', 'AF4_AF3_alpha_da', 'AF4_AF3_alpha_ra', 'AF4_AF3_gamma_da', 'AF4_AF3_gamma_ra', 'AF4_AF3_theta_da', 'AF4_AF3_theta_ra', 'F4_F3_alpha_da', 'F4_F3_alpha_ra', 'F4_F3_gamma_da', 'F4_F3_gamma_ra', 'F4_F3_theta_da', 'F4_F3_theta_ra', 'F8_F7_alpha_da', 'F8_F7_alpha_ra', 'F8_F7_gamma_da', 'F8_F7_gamma_ra', 'F8_F7_theta_da', 'F8_F7_theta_ra', 'FC6_FC5_alpha_da', 'FC6_FC5_alpha_ra', 'FC6_FC5_gamma_da', 'FC6_FC5_gamma_ra', 'FC6_FC5_theta_da', 'FC6_FC5_theta_ra', 'T8_T7_alpha_da', 'T8_T7_alpha_ra', 'T8_T7_gamma_da', 'T8_T7_gamma_ra', 'T8_T7_theta_da', 'T8_T7_theta_ra', 'P8_P7_alpha_da', 'P8_P7_alpha_ra', 'P8_P7_gamma_da', 'P8_P7_gamma_ra', 'P8_P7_theta_da', 'P8_P7_theta_ra', 'O2_O1_alpha_da', 'O2_O1_alpha_ra', 'O2_O1_gamma_da', 'O2_O1_gamma_ra', 'O2_O1_theta_da', 'O2_O1_theta_ra']
+Fold 0: test(k=5)=['133132cd-3fbf-47ba-9aae-904dd09ae86b', '1ac3973c-c080-42f8-a702-2842bfacdcee', '67ea0706-a879-4f3e-9ccb-eee88e55dc4d', '902f0696-60e6-48b2-a23d-c64d8116eb2a', 'cb55e9c5-de1f-4b23-891e-1fab91ecde5d']
+Fold 1: test(k=5)=['0deaeb12-dc13-4d16-878e-ec134b330bf6', 'c1d73b99-82e6-47ff-b4a8-20ea634f7ca4', 'd8d72365-c7fe-494a-8504-0b268331e66e', 'e58ee8e6-b15d-43a3-ac58-56c4fb11d86e', 'ed5a3e23-9e05-4bbc-a998-7d1403a54191']
+Fold 2: test(k=5)=['96f6a467-9ef5-4c1d-a1f2-e219137a7ac1', 'b8175a99-c266-447b-bffa-b0490a5c337f', 'cc79c8ee-48e4-4d7b-8dc0-54ed771a05c7', 'cd30d8fb-98e0-4379-954f-0bf9b2b76e76', 'fbaf41fe-0895-4dc9-988a-59eb3effa7be']
+Fold 3: test(k=5)=['47dc2ddb-2356-4f11-9143-6a42e93ed3ca', '4c9623ea-ce9b-455d-97c8-e8d87ef7eaad', '9ad396af-4129-4092-a06d-e4080ca1df0b', '9f0f8a7a-edd9-4d35-bba4-72029cd2ec56', 'ca488455-71e2-4298-ac54-abb022fdd720']
+
+#############################################
+HP COMBO: lr=0.0001, epochs=100, units=256, batch=64, patience=20, fixed_T=1200
+#############################################
+
+==============================
+Fold 0 | LEFT OUT SESSIONS: [np.str_('902f0696-60e6-48b2-a23d-c64d8116eb2a'), np.str_('cb55e9c5-de1f-4b23-891e-1fab91ecde5d'), np.str_('67ea0706-a879-4f3e-9ccb-eee88e55dc4d'), np.str_('1ac3973c-c080-42f8-a702-2842bfacdcee'), np.str_('133132cd-3fbf-47ba-9aae-904dd09ae86b')]
+==============================
+
+--- Target: affect_valence ---
+Train label counts:
+affect_valence
+4.0    22575
+2.0    21245
+Name: count, dtype: int64
+Test label counts:
+affect_valence
+4.0    11467
+2.0     3341
+Name: count, dtype: int64

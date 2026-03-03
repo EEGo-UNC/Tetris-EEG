@@ -1,0 +1,67 @@
+2026-01-22 13:44:11.781094: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-01-22 13:46:35.230352: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI AVX512_BF16 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2026-01-22 13:48:12.361675: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-01-22 13:50:03.929945: W tensorflow/core/common_runtime/gpu/gpu_bfc_allocator.cc:47] Overriding orig_value setting because the TF_FORCE_GPU_ALLOW_GROWTH environment variable is set. Original config value was 0.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1769107803.931119  962042 gpu_device.cc:2020] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 78779 MB memory:  -> device: 0, name: NVIDIA H100 80GB HBM3, pci bus id: 0000:26:00.0, compute capability: 9.0
+2026-01-22 13:50:33.491685: W external/local_xla/xla/service/gpu/llvm_gpu_backend/default/nvptx_libdevice_path.cc:41] Can't find libdevice directory ${CUDA_DIR}/nvvm/libdevice. This may result in compilation or runtime failures, if the program we try to run uses routines from libdevice.
+Searched for CUDA in the following directories:
+  ./cuda_sdk_lib
+  dreamer_models/EEGo_models.py.runfiles/cuda_nvcc
+  dreamer_models/EEGo_models.py.runfiles/cuda_nvdisasm
+  dreamer_models/EEGo_models.py.runfiles/nvidia_nvshmem
+  dreamer/cuda_nvcc
+  dreamer/cuda_nvdisasm
+  dreamer/nvidia_nvshmem
+  
+  /usr/local/cuda
+  /opt/cuda
+  /users/i/n/inserra/Tetris-EEG/venv/lib/python3.13/site-packages/tensorflow/python/platform/../../../nvidia/cuda_nvcc
+  /users/i/n/inserra/Tetris-EEG/venv/lib/python3.13/site-packages/tensorflow/python/platform/../../../../nvidia/cuda_nvcc
+  /users/i/n/inserra/Tetris-EEG/venv/lib/python3.13/site-packages/tensorflow/python/platform/../../cuda
+  /users/i/n/inserra/Tetris-EEG/venv/lib/python3.13/site-packages/tensorflow/python/platform/../../../../../..
+  /users/i/n/inserra/Tetris-EEG/venv/lib/python3.13/site-packages/tensorflow/python/platform/../../../../../../..
+  .
+You can choose the search directory by setting xla_gpu_cuda_data_dir in HloModule's DebugOptions.  For most apps, setting the environment variable XLA_FLAGS=--xla_gpu_cuda_data_dir=/path/to/cuda will work.
+2026-01-22 13:50:40.194521: W tensorflow/compiler/mlir/tools/kernel_gen/transforms/gpu_kernel_to_blob_pass.cc:188] Failed to compile generated PTX with ptxas. Falling back to compilation by driver.
+2026-01-22 13:50:40.196022: W tensorflow/compiler/mlir/tools/kernel_gen/transforms/gpu_kernel_to_blob_pass.cc:188] Failed to compile generated PTX with ptxas. Falling back to compilation by driver.
+2026-01-22 13:50:40.197532: W tensorflow/compiler/mlir/tools/kernel_gen/transforms/gpu_kernel_to_blob_pass.cc:188] Failed to compile generated PTX with ptxas. Falling back to compilation by driver.
+2026-01-22 13:50:40.199049: W tensorflow/compiler/mlir/tools/kernel_gen/transforms/gpu_kernel_to_blob_pass.cc:188] Failed to compile generated PTX with ptxas. Falling back to compilation by driver.
+2026-01-22 13:50:40.200550: W tensorflow/compiler/mlir/tools/kernel_gen/transforms/gpu_kernel_to_blob_pass.cc:188] Failed to compile generated PTX with ptxas. Falling back to compilation by driver.
+2026-01-22 13:50:40.202061: W tensorflow/compiler/mlir/tools/kernel_gen/transforms/gpu_kernel_to_blob_pass.cc:188] Failed to compile generated PTX with ptxas. Falling back to compilation by driver.
+2026-01-22 13:50:40.203568: W tensorflow/compiler/mlir/tools/kernel_gen/transforms/gpu_kernel_to_blob_pass.cc:188] Failed to compile generated PTX with ptxas. Falling back to compilation by driver.
+2026-01-22 13:50:40.206580: W tensorflow/compiler/mlir/tools/kernel_gen/transforms/gpu_kernel_to_blob_pass.cc:188] Failed to compile generated PTX with ptxas. Falling back to compilation by driver.
+2026-01-22 13:50:40.214250: W tensorflow/compiler/mlir/tools/kernel_gen/transforms/gpu_kernel_to_blob_pass.cc:188] Failed to compile generated PTX with ptxas. Falling back to compilation by driver.
+2026-01-22 13:50:40.216133: W tensorflow/compiler/mlir/tools/kernel_gen/transforms/gpu_kernel_to_blob_pass.cc:188] Failed to compile generated PTX with ptxas. Falling back to compilation by driver.
+2026-01-22 13:50:40.217667: W tensorflow/compiler/mlir/tools/kernel_gen/transforms/gpu_kernel_to_blob_pass.cc:188] Failed to compile generated PTX with ptxas. Falling back to compilation by driver.
+2026-01-22 13:50:40.219198: W tensorflow/compiler/mlir/tools/kernel_gen/transforms/gpu_kernel_to_blob_pass.cc:188] Failed to compile generated PTX with ptxas. Falling back to compilation by driver.
+2026-01-22 13:50:40.220718: W tensorflow/compiler/mlir/tools/kernel_gen/transforms/gpu_kernel_to_blob_pass.cc:188] Failed to compile generated PTX with ptxas. Falling back to compilation by driver.
+2026-01-22 13:50:49.081770: W external/local_xla/xla/service/gpu/llvm_gpu_backend/nvptx_backend.cc:110] libdevice is required by this HLO module but was not found at ./libdevice.10.bc
+error: libdevice not found at ./libdevice.10.bc
+2026-01-22 13:50:49.082106: E tensorflow/compiler/mlir/tools/kernel_gen/tf_framework_c_interface.cc:227] INTERNAL: Generating device code failed.
+2026-01-22 13:50:49.082995: W tensorflow/core/framework/op_kernel.cc:1842] UNKNOWN: JIT compilation failed.
+2026-01-22 13:50:49.083025: I tensorflow/core/framework/local_rendezvous.cc:407] Local rendezvous is aborting with status: UNKNOWN: JIT compilation failed.
+Traceback (most recent call last):
+  File "/users/i/n/inserra/Tetris-EEG/dreamer_models/EEGo_models.py", line 406, in <module>
+    main()
+    ~~~~^^
+  File "/users/i/n/inserra/Tetris-EEG/dreamer_models/EEGo_models.py", line 310, in main
+    lstm_model, X_test_eval, y_test_eval = train_lstm(
+                                           ~~~~~~~~~~^
+        X_train_seq,
+        ^^^^^^^^^^^^
+    ...<9 lines>...
+        verbose=2,  # epoch-level logs (good for SLURM)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/users/i/n/inserra/Tetris-EEG/dreamer_models/ML/model_training.py", line 246, in train_lstm
+    x = layers.Bidirectional(lstm_block)(inp) if bidirectional else lstm_block(inp)
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+  File "/users/i/n/inserra/Tetris-EEG/venv/lib/python3.13/site-packages/keras/src/utils/traceback_utils.py", line 122, in error_handler
+    raise e.with_traceback(filtered_tb) from None
+  File "/users/i/n/inserra/Tetris-EEG/venv/lib/python3.13/site-packages/keras/src/backend/tensorflow/numpy.py", line 2421, in sign
+    return tf.sign(x)
+           ~~~~~~~^^^
+tensorflow.python.framework.errors_impl.UnknownError: {{function_node __wrapped__Sign_device_/job:localhost/replica:0/task:0/device:GPU:0}} JIT compilation failed. [Op:Sign] name: 
