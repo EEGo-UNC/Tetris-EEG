@@ -233,13 +233,13 @@ def main() -> None:
 
     # ---------------- Hyper-parameter grid ----------------
     param_grid = {
-        "lr": [1e-4],
-        "epochs": [100],
-        "units": [512],
+        "lr": [1e-3,1e-4],
+        "epochs": [100, 300],
+        "units": [128, 256, 512],
         "batch_size": [256],
-        "patience": [10],
+        "patience": [20],
         "dropout": [0.20],
-        "recurrent_dropout": [0.1],
+        "recurrent_dropout": [0.0, 0.1],
         "bidirectional": [True],
         "random_seed": [42],
         "verbose": [2],

@@ -182,6 +182,7 @@ def build_eego_lstm_sequences(
     y_arr = np.asarray(y_labels, dtype=np.float32)
     return X_padded, y_arr
 
+
 def train_lstm(
     X_train: pd.DataFrame | np.ndarray,
     X_test: pd.DataFrame | np.ndarray,
@@ -232,7 +233,9 @@ def train_lstm(
         y_test_arr = None
 
     if X_train_arr.ndim != 3:
-        raise ValueError(f"X_train must be 3D (trials, timesteps, features), got {X_train_arr.shape}")
+        raise ValueError(
+            f"X_train must be 3D (trials, timesteps, features), got {X_train_arr.shape}"
+        )
 
     timesteps = X_train_arr.shape[1]
     n_features = X_train_arr.shape[2]
@@ -245,7 +248,7 @@ def train_lstm(
         return_sequences=False,
     )
     x = layers.Bidirectional(lstm_block)(inp) if bidirectional else lstm_block(inp)
-    x = layers.Dense(units // 2, activation="leaky_relu")(x)
+    x = layers.Dense(units // 2, activation="relu")(x)
     x = layers.Dropout(dropout)(x)
     out = layers.Dense(1, activation="sigmoid")(x)
 
@@ -253,18 +256,21 @@ def train_lstm(
     model.compile(
         optimizer=optimizers.Adam(learning_rate=lr),
         loss="binary_crossentropy",
-        metrics=["accuracy", tf.keras.metrics.AUC(name="auc")],
+        metrics=[
+            "accuracy",
+            tf.keras.metrics.AUC(name="auc", curve="ROC"),
+        ],
     )
 
     cbs = [
         callbacks.EarlyStopping(
-            monitor="val_accuracy",
+            monitor="val_auc",
             patience=patience,
             restore_best_weights=True,
             mode="max",
         ),
         callbacks.ReduceLROnPlateau(
-            monitor="val_accuracy",
+            monitor="val_auc",
             factor=0.5,
             patience=max(2, patience // 2),
             min_lr=1e-6,
@@ -290,9 +296,16 @@ def train_lstm(
                 [1.0 if str(v).lower() == "high" else 0.0 for v in y_val_arr],
                 dtype=np.float32,
             )
-        model.fit(X_train_arr, y_train_arr, validation_data=(X_val_arr, y_val_arr), **fit_kwargs)
+        model.fit(
+            X_train_arr,
+            y_train_arr,
+            validation_data=(X_val_arr, y_val_arr),
+            **fit_kwargs,
+        )
     else:
-        model.fit(X_train_arr, y_train_arr, validation_split=validation_split, **fit_kwargs)
+        model.fit(
+            X_train_arr, y_train_arr, validation_split=validation_split, **fit_kwargs
+        )
 
     return model, X_test_arr, y_test_arr
 
