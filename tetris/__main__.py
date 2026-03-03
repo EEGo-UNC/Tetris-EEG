@@ -3,7 +3,8 @@ import pygame
 from .settings import *
 from .difficulties import *
 from .game import Game
-from experiment import experiment as exp
+# from experiment import experiment as exp
+from experiment import experiment_muse as exp
 import time
 import os
 import random
@@ -72,11 +73,11 @@ def draw_mini_piece(screen, piece, pos_x, pos_y):
 
 def main():
     exp.set_global_session_id()
-    exp.init_epoc_record()
+    # exp.init_epoc_record()
+    exp.init_muse_record()
 
     time.sleep(5)
     user_id = int(input("1-Vitor, 2-Nick, 3-Vish, 4-Jayasri: "))
-    exp.EpocX.pow_data_batch.drop(exp.EpocX.pow_data_batch.index, inplace=True)
 
     fall_time = 0
     fall_speed = 450  # ms

@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import os
 import time
+import csv
+import json
+from datetime import datetime
 from itertools import product
 
 import numpy as np
@@ -41,7 +44,10 @@ def load_eego_df(filename: str = "dreamer_models/datasets/EEGo_labeled.csv") -> 
 
 def select_eego_features(df: pd.DataFrame) -> list[str]:
     eeg_prefixes = [
-        "F7_", "T7_", "T8_", "F8_",  # Muse alt: ["AF7_", "TP9_", "TP10_", "AF8_"]
+        "F7_",
+        "T7_",
+        "T8_",
+        "F8_",  # Muse alt: ["AF7_", "TP9_", "TP10_", "AF8_"]
     ]
     return [c for c in df.columns if any(c.startswith(p) for p in eeg_prefixes)]
 
@@ -113,6 +119,108 @@ def print_summary_block(title: str, summary: dict[str, tuple[float, float]]) -> 
     print(title, flush=True)
     for k, (m, s) in summary.items():
         print(f"    {k}: {m:.4f} (std={s:.4f})", flush=True)
+
+
+# ============================================================
+#                Hyperparam combo logging helpers
+# ============================================================
+def _flatten_summary(prefix: str, summary: dict[str, tuple[float, float]]) -> dict[str, float]:
+    """
+    Turns {"bal_acc": (mean,std), ...} into {"val_bal_acc_mean": ..., "val_bal_acc_std": ...}
+    """
+    out: dict[str, float] = {}
+    for k, (m, s) in summary.items():
+        out[f"{prefix}{k}_mean"] = float(m)
+        out[f"{prefix}{k}_std"] = float(s)
+    return out
+
+
+def append_hp_combo_log_csv(
+    log_path: str,
+    *,
+    params: dict,
+    val_summary: dict[str, tuple[float, float]],
+    aro_summary: dict[str, tuple[float, float]],
+    combined_mean: float,
+    combo_runtime_sec: float,
+    n_val_folds: int,
+    n_aro_folds: int,
+    best_so_far: bool,
+) -> None:
+    """
+    Appends ONE row per HP combo with mean/std metrics (averaged across folds).
+    Writes header if file doesn't exist / is empty.
+    """
+    os.makedirs(os.path.dirname(log_path) or ".", exist_ok=True)
+
+    row: dict[str, object] = {
+        "ts": datetime.now().isoformat(timespec="seconds"),
+        "combined_mean": float(combined_mean),
+        "runtime_sec": float(combo_runtime_sec),
+        "runtime_min": float(combo_runtime_sec) / 60.0,
+        "n_val_folds": int(n_val_folds),
+        "n_aro_folds": int(n_aro_folds),
+        "best_so_far": int(bool(best_so_far)),
+        **params,
+        **_flatten_summary("val_", val_summary),
+        **_flatten_summary("aro_", aro_summary),
+    }
+
+    file_exists = os.path.exists(log_path)
+    needs_header = (not file_exists) or (os.path.getsize(log_path) == 0)
+
+    core_cols = [
+        "ts",
+        "combined_mean",
+        "runtime_sec",
+        "runtime_min",
+        "n_val_folds",
+        "n_aro_folds",
+        "best_so_far",
+    ]
+    extra_cols = sorted([k for k in row.keys() if k not in core_cols])
+    fieldnames = core_cols + extra_cols
+
+    with open(log_path, "a", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        if needs_header:
+            writer.writeheader()
+        writer.writerow(row)
+        f.flush()
+
+
+def append_hp_combo_log_jsonl(
+    log_path: str,
+    *,
+    params: dict,
+    val_summary: dict[str, tuple[float, float]],
+    aro_summary: dict[str, tuple[float, float]],
+    combined_mean: float,
+    combo_runtime_sec: float,
+    n_val_folds: int,
+    n_aro_folds: int,
+    best_so_far: bool,
+) -> None:
+    """
+    Optional: JSONL is nice for programmatic parsing later.
+    """
+    os.makedirs(os.path.dirname(log_path) or ".", exist_ok=True)
+
+    payload = {
+        "ts": datetime.now().isoformat(timespec="seconds"),
+        "combined_mean": float(combined_mean),
+        "runtime_sec": float(combo_runtime_sec),
+        "n_val_folds": int(n_val_folds),
+        "n_aro_folds": int(n_aro_folds),
+        "best_so_far": bool(best_so_far),
+        "params": params,
+        "val_summary": {k: {"mean": float(m), "std": float(s)} for k, (m, s) in val_summary.items()},
+        "aro_summary": {k: {"mean": float(m), "std": float(s)} for k, (m, s) in aro_summary.items()},
+    }
+
+    with open(log_path, "a") as f:
+        f.write(json.dumps(payload) + "\n")
+        f.flush()
 
 
 # ============================================================
@@ -233,7 +341,7 @@ def main() -> None:
 
     # ---------------- Hyper-parameter grid ----------------
     param_grid = {
-        "lr": [1e-3,1e-4],
+        "lr": [1e-3, 1e-4],
         "epochs": [100, 300],
         "units": [128, 256, 512],
         "batch_size": [256],
@@ -248,6 +356,12 @@ def main() -> None:
     best_params: dict | None = None
     best_mean_score = -np.inf
     OPT_METRIC = "bal_acc"
+
+    # ---- Log one line PER HP COMBO (means/std across folds) ----
+    LOG_DIR = "logs"
+    os.makedirs(LOG_DIR, exist_ok=True)
+    hp_csv_log = os.path.join(LOG_DIR, "hp_combo_averages.csv")
+    hp_jsonl_log = os.path.join(LOG_DIR, "hp_combo_averages.jsonl")  # optional
 
     for lr, epochs, units, batch_size, patience, dropout, recurrent_dropout, bidirectional, random_seed, verbose in product(
         param_grid["lr"],
@@ -466,6 +580,50 @@ def main() -> None:
         print_summary_block("  AROUSAL (mean/std):", aro_summary)
         print(f"  Combined mean score = {combined_mean:.4f}", flush=True)
         print("=============================================\n", flush=True)
+
+        # ---- write combo averages to log (mean/std across folds) ----
+        combo_params = {
+            "lr": lr,
+            "epochs": epochs,
+            "units": units,
+            "batch_size": batch_size,
+            "patience": patience,
+            "dropout": dropout,
+            "recurrent_dropout": recurrent_dropout,
+            "bidirectional": bidirectional,
+            "random_seed": random_seed,
+            "verbose": verbose,
+            "fixed_T": FIXED_T,
+            "thresh": THRESH,
+            "left_out_val_frac": LEFT_OUT_VAL_FRAC,
+            "opt_metric": OPT_METRIC,
+        }
+        would_be_best = bool(combined_mean > best_mean_score)
+
+        append_hp_combo_log_csv(
+            hp_csv_log,
+            params=combo_params,
+            val_summary=val_summary,
+            aro_summary=aro_summary,
+            combined_mean=combined_mean,
+            combo_runtime_sec=dt_combo,
+            n_val_folds=len(val_scores),
+            n_aro_folds=len(aro_scores),
+            best_so_far=would_be_best,
+        )
+
+        # optional JSONL too (handy for parsing later)
+        append_hp_combo_log_jsonl(
+            hp_jsonl_log,
+            params=combo_params,
+            val_summary=val_summary,
+            aro_summary=aro_summary,
+            combined_mean=combined_mean,
+            combo_runtime_sec=dt_combo,
+            n_val_folds=len(val_scores),
+            n_aro_folds=len(aro_scores),
+            best_so_far=would_be_best,
+        )
 
         if combined_mean > best_mean_score:
             best_mean_score = float(combined_mean)
