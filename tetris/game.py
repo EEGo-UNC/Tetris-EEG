@@ -6,7 +6,7 @@ from .board import Board
 from .settings import *
 from .analytics import *
 import time
-from experiment import experiment as exp
+from experiment import experiment_muse as exp
 
 class Game:
     def __init__(self, difficulty_level=0):

@@ -3,7 +3,8 @@ import pandas as pd
 import os
 import eegproc as eeg
 from dreamer_models.ML.utils import compute_asymmetry_from_psd
-from dreamer_models.predictor_model import arousal_model, valence_model, features
+# from dreamer_models.predictor_model import arousal_model, valence_model, features
+from dreamer_models.muse_predictor import arousal_model, valence_model, features
 import numpy as np
 
 
@@ -61,6 +62,11 @@ def save_eeg_data(
         )
 
 
+HOMOLOGOUS_PAIRS = [
+    ("AF7", "AF8"),
+    ("TP9", "TP10"),
+]
+
 def featurize_cur_sesh_psd(
     user_id: int,
     session_id: int,
@@ -76,7 +82,7 @@ def featurize_cur_sesh_psd(
     n = len(df)
 
     shannons = eeg.shannons_entropy(df)
-    asymm = compute_asymmetry_from_psd(df)
+    asymm = compute_asymmetry_from_psd(df, HOMOLOGOUS_PAIRS)
 
     meta = pd.DataFrame(
         {
@@ -92,6 +98,7 @@ def featurize_cur_sesh_psd(
         }
     )
     batch = pd.concat([meta, df, shannons, asymm], axis=1)
+    print(batch.columns)
 
     return batch
 

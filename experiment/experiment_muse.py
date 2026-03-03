@@ -5,6 +5,7 @@ import time
 import threading
 import uuid
 import pandas as pd
+import eegproc
 
 from .Muse.MuseService import start_muse_reader, stop_muse_reader, pow_data_batch, sensor_contact_quality, MuseLSLConfig
 from .EpocX.EpocXData import save_eeg_data, featurize_cur_sesh_psd, predict_flow
@@ -84,7 +85,7 @@ def predict_n_insert(
     arousal_pred, valence_pred = predict_flow(featurized_batch)
 
     save_eeg_data(
-        "dreamer_models/datasets/curr_sesh.csv",
+        "dreamer_models/datasets/curr_sesh_muse.csv",
         user_id,
         session_id,
         object_count,

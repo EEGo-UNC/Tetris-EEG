@@ -26,7 +26,7 @@ import tensorflow as tf
 # IMPORTANT:
 # This uses YOUR existing architecture + training loop from ML.model_training
 # Assumes you've updated train_lstm to accept X_val/y_val + validation_data
-from ML.model_training import build_eego_lstm_sequences, train_lstm
+from .ML.model_training import build_eego_lstm_sequences, train_lstm
 
 
 # ============================================================

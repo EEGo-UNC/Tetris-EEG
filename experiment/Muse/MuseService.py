@@ -9,6 +9,7 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 from pylsl import StreamInlet, resolve_byprop
+import eegproc
 
 
 # ============================================================
@@ -34,65 +35,6 @@ sensor_contact_quality: float = 1.0
 _stop_event = threading.Event()
 _reader_thread: Optional[threading.Thread] = None
 
-
-# ============================================================
-# Bandpower helpers
-# ============================================================
-
-def _welch_psd(x: np.ndarray, fs: float) -> Tuple[np.ndarray, np.ndarray]:
-    """
-    Minimal Welch PSD without scipy dependency if needed.
-    If you DO have scipy, you can swap this with scipy.signal.welch.
-    """
-    # Simple periodogram-style PSD (not as good as Welch, but robust / dependency-free).
-    # For better PSD, prefer scipy.signal.welch.
-    n = len(x)
-    if n < 8:
-        freqs = np.array([0.0])
-        psd = np.array([0.0])
-        return freqs, psd
-
-    x = x - np.mean(x)
-    win = np.hanning(n)
-    xw = x * win
-    fft = np.fft.rfft(xw)
-    psd = (np.abs(fft) ** 2) / (fs * np.sum(win ** 2))
-    freqs = np.fft.rfftfreq(n, d=1.0 / fs)
-    return freqs, psd
-
-
-def _bandpower(freqs: np.ndarray, psd: np.ndarray, fmin: float, fmax: float) -> float:
-    idx = np.logical_and(freqs >= fmin, freqs <= fmax)
-    if not np.any(idx):
-        return 0.0
-    # integrate PSD over band
-    return float(np.trapz(psd[idx], freqs[idx]))
-
-
-def _compute_band_powers_window(window: np.ndarray, fs: float) -> Dict[str, Dict[str, float]]:
-    """
-    window: shape (n_samples, n_channels) in CHANNELS order
-    returns: {channel: {band: power}}
-    """
-    # Band definitions (Hz) to match your theta/alpha/betaL/betaH/gamma
-    band_defs = {
-        "theta": (4.0, 8.0),
-        "alpha": (8.0, 13.0),
-        "betaL": (13.0, 20.0),
-        "betaH": (20.0, 30.0),
-        "gamma": (30.0, 45.0),
-    }
-
-    out: Dict[str, Dict[str, float]] = {}
-    for ci, ch in enumerate(CHANNELS):
-        x = window[:, ci].astype(np.float64, copy=False)
-        freqs, psd = _welch_psd(x, fs)
-
-        out[ch] = {}
-        for band, (fmin, fmax) in band_defs.items():
-            out[ch][band] = _bandpower(freqs, psd, fmin, fmax)
-
-    return out
 
 
 # ============================================================
@@ -127,7 +69,7 @@ def _resolve_muse_eeg_stream(cfg: MuseLSLConfig):
 
 
 def _lsl_reader_loop(cfg: MuseLSLConfig):
-    global pow_data_batch, sensor_contact_quality
+    global pow_data_batch, sensor_contact_quality 
 
     info = _resolve_muse_eeg_stream(cfg)
     inlet = StreamInlet(info, max_buflen=10)
@@ -135,7 +77,7 @@ def _lsl_reader_loop(cfg: MuseLSLConfig):
     fs = float(info.nominal_srate())
     if fs <= 0:
         # fallback; Muse 2 is usually 256 Hz
-        fs = 256.0
+        fs = 128.0
 
     n_chan = info.channel_count()
     if n_chan < 4:
@@ -176,12 +118,15 @@ def _lsl_reader_loop(cfg: MuseLSLConfig):
         # emit at hop rate once we have enough for a window
         if len(buf) >= win_n and (len(buf) - last_emit_samples) >= hop_n:
             window = buf[-win_n:, :]  # (win_n,4)
-            bp = _compute_band_powers_window(window, fs)
+            window_df = pd.DataFrame(window, columns=CHANNELS)
+            bp_filt = eegproc.bandpass_filter(window_df, fs=128, bands=eegproc.FREQUENCY_BANDS, low=5.0, high=45)
+            batch_psd = eegproc.psd_bandpowers(bp_filt, fs=128, bands=eegproc.FREQUENCY_BANDS, window_sec=2)
+    
 
             row: List[float] = []
             for ch in CHANNELS:
                 for band in BANDS:
-                    row.append(bp[ch][band])
+                    row.append(float(batch_psd[f"{ch}_{band}"].iloc[-1]))
 
             # timestamp: use LSL timestamp ts
             row.append(float(ts))
