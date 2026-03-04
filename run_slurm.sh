@@ -1,11 +1,10 @@
 #!/bin/bash
-#SBATCH --job-name=eego_gpu
-#SBATCH --partition=h100_sn
-#SBATCH --gres=gpu:1
-#SBATCH --ntasks=1
+
+#SBATCH --job-name=eego_cpu
+#SBATCH -n 1
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=32G
-#SBATCH --time=01:00:00
+#SBATCH --mem=32g
+#SBATCH -t 01:00:00
 #SBATCH --output=%x_%j.out
 #SBATCH --error=%x_%j.err
 
@@ -19,16 +18,16 @@ mkdir -p "$LOGDIR"
 
 echo "PWD: $(pwd)"
 echo "LOGDIR: $LOGDIR"
+echo "SLURM_JOB_ID: ${SLURM_JOB_ID:-}"
+echo "SLURM_JOB_NODELIST: ${SLURM_JOB_NODELIST:-}"
 
 module purge
-module load python/3.13
-module load cuda/12.9
+module add python/3.13
 
-source venv/bin/activate
+source "$SUBMIT_DIR/venv/bin/activate"
 
-export TF_FORCE_GPU_ALLOW_GROWTH=true
-if [[ -n "${CUDA_HOME:-}" ]]; then
-  export XLA_FLAGS="--xla_gpu_cuda_data_dir=$CUDA_HOME"
-fi
+
+export CUDA_VISIBLE_DEVICES=""
+export TF_CPP_MIN_LOG_LEVEL=1
 
 python -u dreamer_models/EEGo_models.py
