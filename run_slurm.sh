@@ -1,6 +1,6 @@
 #!/bin/bash
-
 #SBATCH --job-name=eego_cpu
+#SBATCH -p small
 #SBATCH -n 1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=32g
@@ -26,8 +26,5 @@ module add python/3.13
 
 source "$SUBMIT_DIR/venv/bin/activate"
 
-
-export CUDA_VISIBLE_DEVICES=""
-export TF_CPP_MIN_LOG_LEVEL=1
 
 python -u dreamer_models/EEGo_models.py
