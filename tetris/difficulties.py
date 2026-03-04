@@ -34,7 +34,7 @@ def increase_difficulty_blocks_placed(game: Game, arousal: int, valence: int, ma
 def increase_difficulty_minimize_emotion_distance(game: Game, arousal: int, valence: int, max_speed=50, min_speed=600):
     """Increase fall speed based on the distance from target arousal and valence."""
     
-    delta_s = delta_s_vec(valence, arousal)
+    delta_s = delta_s_vec(valence, arousal, activation_constant=0.8)
     # get current speed
     return_speed = game.fall_speed - (delta_s * MAX_SPEED_CHANGE)
     return max(min(return_speed, min_speed), max_speed)

@@ -1,6 +1,6 @@
 # settings.py
 # Window size
-WINDOW_WIDTH = 600
+WINDOW_WIDTH = 700
 WINDOW_HEIGHT = 800
 
 # Board settings
