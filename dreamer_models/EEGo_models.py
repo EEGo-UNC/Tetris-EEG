@@ -341,7 +341,7 @@ def main() -> None:
 
     # ---------------- Hyper-parameter grid ----------------
     param_grid = {
-        "lr": [1e-3, 1e-4],
+        "lr": [5e-4, 1e-4],
         "epochs": [100, 300],
         "units": [128, 256, 512],
         "batch_size": [256],
