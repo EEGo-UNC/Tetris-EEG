@@ -208,37 +208,6 @@ Run the notebook: `notebooks/DREAMER_Create_Filtered_Dataset.ipynb`
 
 ---
 
-## EEGO Dataset Annotation Tools
-
-For working with **Bespoke EEGO datasets** (real-time EEG data collected during Tetris gameplay), we provide tools to annotate and generate multi-minute datasets with valence and arousal labels.
-
-### GUI Tool for Minute-wise Valence/Arousal Rating
-
-After collecting EEGO data, use the GUI tool to rate valence and arousal **minute-by-minute**:
-
-```bash
-python scripts/rate_minute_affect_gui.py \
-  --eego-csv datasets/Bespoke/EEGO.csv \
-  --scale-min 1 --scale-max 9
-```
-
-**Features:**
-- **Interactive GUI** with sliders for valence and arousal (configurable scale: 1-5, 1-9, etc.)
-- **Auto-detects session duration** from `time_elapsed` or `timestamp` columns
-- **Splits session into minutes** automatically
-- **Navigation** between minutes (Previous/Next buttons)
-- **Auto-saves** progress as you rate each minute
-
-**Outputs:**
-- `EEGO_minute_affect.csv` - One row per minute with your ratings
-- `EEGO_with_minute_affect.csv` - Original EEGO data with minute-wise valence/arousal columns merged in (`affect_minute`, `start_sec`, `end_sec`, `valence_y`, `arousal_y`)
-
-**Configuration:**
-- `--scale-min` / `--scale-max`: Set rating scale (e.g., `1-5` or `1-9`)
-- `--time-column`: Specify which column to use for time (`time_elapsed` or `timestamp`, auto-detected by default)
-
----
-
 ## Directory Structure
 
 ```
@@ -273,34 +242,28 @@ EEG Prediction/
 │   │       ├── dataset_*.csv
 │   │       └── README.md
 │   │
-│   │
-│   ├── Dreamer/
-│   │   ├── features_table.csv          # Main DREAMER features (bandpower, activity, etc.)
-│   │   ├── features_table_imf.csv      # IMF features (IMF energy, IMF entropy)
-│   │   ├── features_table_psd_shannon.csv
-│   │   │
-│   │   ├── filtered/                   # DREAMER feature-importance rankings (CSV)
-│   │   │   ├── dreamer_feature_importance_valence.csv
-│   │   │   └── dreamer_feature_importance_arousal.csv
-│   │   │
-│   │   ├── stats/                      # DREAMER feature-importance plots
-│   │   │   ├── dreamer_correlation_analysis.png
-│   │   │   ├── dreamer_random_forest_importance.png
-│   │   │   └── dreamer_top_features_aggregated.png
-│   │   │
-│   │   └── filtered_features/          # DREAMER filtered datasets (generated)
-│   │       ├── X_valence_top30.npy
-│   │       ├── X_arousal_top30.npy
-│   │       ├── X_combined_top40.npy
-│   │       ├── y_valence_binary.npy
-│   │       ├── y_arousal_binary.npy
-│   │       ├── dataset_*.csv
-│   │       └── README.md
-│   │
-│   └── Bespoke/                        # Real-time EEGO datasets (Tetris gameplay)
-│       ├── EEGO.csv                    # Raw EEGO data
-│       ├── EEGO_minute_affect.csv      # Minute-wise valence/arousal ratings
-│       └── EEGO_with_minute_affect.csv # EEGO data with merged minute labels
+│   └── Dreamer/
+│       ├── features_table.csv          # Main DREAMER features (bandpower, activity, etc.)
+│       ├── features_table_imf.csv      # IMF features (IMF energy, IMF entropy)
+│       ├── features_table_psd_shannon.csv
+│       │
+│       ├── filtered/                   # DREAMER feature-importance rankings (CSV)
+│       │   ├── dreamer_feature_importance_valence.csv
+│       │   └── dreamer_feature_importance_arousal.csv
+│       │
+│       ├── stats/                      # DREAMER feature-importance plots
+│       │   ├── dreamer_correlation_analysis.png
+│       │   ├── dreamer_random_forest_importance.png
+│       │   └── dreamer_top_features_aggregated.png
+│       │
+│       └── filtered_features/          # DREAMER filtered datasets (generated)
+│           ├── X_valence_top30.npy
+│           ├── X_arousal_top30.npy
+│           ├── X_combined_top40.npy
+│           ├── y_valence_binary.npy
+│           ├── y_arousal_binary.npy
+│           ├── dataset_*.csv
+│           └── README.md
 │
 ├── notebooks/                          # Jupyter notebooks for experiments
 │   ├── ANN_SVM_RF_KNN.ipynb            # Classical ML models + ANN
@@ -315,8 +278,7 @@ EEG Prediction/
 │   └── DREAMER_Create_Filtered_Dataset.ipynb      # DREAMER filtered datasets
 │
 ├── scripts/                            # Standalone Python scripts
-│   ├── deap_baseline.py                # Baseline feature extraction + classification
-│   └── rate_minute_affect_gui.py       # GUI tool for minute-wise valence/arousal rating (EEGO)
+│   └── deap_baseline.py                # Baseline feature extraction + classification
 │
 ├── .gitignore                          # Ignored files (datasets, checkpoints, etc.)
 ├── deap_dataset.py                     # Utility for dataset loading/preprocessing
