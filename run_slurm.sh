@@ -3,8 +3,8 @@
 #SBATCH -p small
 #SBATCH -n 1
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=32g
-#SBATCH -t 01:00:00
+#SBATCH --mem=32G
+#SBATCH --time=08:00:00
 #SBATCH --output=%x_%j.out
 #SBATCH --error=%x_%j.err
 

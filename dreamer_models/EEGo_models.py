@@ -16,12 +16,15 @@ from sklearn.metrics import (
     precision_score,
     recall_score,
     f1_score,
+    roc_auc_score,
     balanced_accuracy_score,
     matthews_corrcoef,
     classification_report,
 )
 
 import tensorflow as tf
+print("GPUs:", tf.config.list_physical_devices("GPU"))
+from ML.model_training import train_lstm, build_eego_lstm_sequences
 
 # IMPORTANT:
 # This uses YOUR existing architecture + training loop from ML.model_training
@@ -29,10 +32,8 @@ import tensorflow as tf
 from .ML.model_training import build_eego_lstm_sequences, train_lstm
 
 
-# ============================================================
-#                     Data prep helpers
-# ============================================================
-def load_eego_df(filename: str = "dreamer_models/datasets/EEGo_labeled.csv") -> pd.DataFrame:
+# ---------------- Data prep ----------------
+def load_eego_df(filename: str | Path = "EEGo_labeled.csv") -> pd.DataFrame:
     df = pd.read_csv(filename)
     sort_cols = ["user_id", "session_id"]
     if "time_elapsed" in df.columns:
@@ -52,45 +53,37 @@ def select_eego_features(df: pd.DataFrame) -> list[str]:
     return [c for c in df.columns if any(c.startswith(p) for p in eeg_prefixes)]
 
 
-def split_sequences_val_test(
-    X: np.ndarray,
-    y: np.ndarray,
-    *,
-    val_frac: float = 0.30,
-    seed: int = 123,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """
-    Split a single user's sequences into (val, test).
-    """
-    X = np.asarray(X)
-    y = np.asarray(y)
-    n = int(X.shape[0])
-    if n == 0:
-        return X[:0], y[:0], X[:0], y[:0]
-    if n == 1:
-        # can't split; we refuse to "test" if we'd be validating on the same single seq
-        return X[:0], y[:0], X[:0], y[:0]
-
+def balance_binary_sequences(X: np.ndarray, y: np.ndarray, seed: int = 5) -> tuple[np.ndarray, np.ndarray]:
     rng = np.random.default_rng(seed)
-    idx = np.arange(n)
-    rng.shuffle(idx)
 
-    n_val = max(1, int(round(val_frac * n)))
-    if n_val >= n:
-        n_val = n - 1
+    idx_pos = np.where(y == 1.0)[0]
+    idx_neg = np.where(y == 0.0)[0]
 
-    val_idx = idx[:n_val]
-    test_idx = idx[n_val:]
+    n_pos = len(idx_pos)
+    n_neg = len(idx_neg)
 
-    return X[val_idx], y[val_idx], X[test_idx], y[test_idx]
+    if n_pos == 0 or n_neg == 0 or n_pos == n_neg:
+        return X, y
+
+    if n_pos > n_neg:
+        keep_pos = rng.choice(idx_pos, size=n_neg, replace=False)
+        keep_idx = np.concatenate([keep_pos, idx_neg])
+    else:
+        keep_neg = rng.choice(idx_neg, size=n_pos, replace=False)
+        keep_idx = np.concatenate([keep_neg, idx_pos])
+
+    keep_idx = np.sort(keep_idx)
+    return X[keep_idx], y[keep_idx]
 
 
-# ============================================================
-#                    Metrics helpers
-# ============================================================
-def compute_binary_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> tuple[dict[str, float], np.ndarray]:
+# ---------------- Metrics helpers ----------------
+def compute_binary_metrics(y_true: np.ndarray, y_prob: np.ndarray, thresh: float = 0.5) -> tuple[dict[str, float], np.ndarray, np.ndarray]:
+    """
+    Returns (metrics_dict, y_pred, confusion_matrix)
+    """
     y_true = np.asarray(y_true).astype(int).reshape(-1)
-    y_pred = np.asarray(y_pred).astype(int).reshape(-1)
+    y_prob = np.asarray(y_prob).reshape(-1)
+    y_pred = (y_prob >= thresh).astype(int)
 
     metrics = {
         "acc": accuracy_score(y_true, y_pred),
@@ -100,8 +93,15 @@ def compute_binary_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> tuple[dict
         "f1": f1_score(y_true, y_pred, zero_division=0),
         "mcc": matthews_corrcoef(y_true, y_pred),
     }
+
+    # AUC only defined if both classes are present
+    if len(np.unique(y_true)) == 2:
+        metrics["auc"] = roc_auc_score(y_true, y_prob)
+    else:
+        metrics["auc"] = float("nan")
+
     cm = confusion_matrix(y_true, y_pred, labels=[0, 1])
-    return metrics, cm
+    return metrics, y_pred, cm
 
 
 def summarize_metric_dicts(dicts: list[dict[str, float]]) -> dict[str, tuple[float, float]]:
@@ -121,202 +121,70 @@ def print_summary_block(title: str, summary: dict[str, tuple[float, float]]) -> 
         print(f"    {k}: {m:.4f} (std={s:.4f})", flush=True)
 
 
-# ============================================================
-#                Hyperparam combo logging helpers
-# ============================================================
-def _flatten_summary(prefix: str, summary: dict[str, tuple[float, float]]) -> dict[str, float]:
-    """
-    Turns {"bal_acc": (mean,std), ...} into {"val_bal_acc_mean": ..., "val_bal_acc_std": ...}
-    """
-    out: dict[str, float] = {}
-    for k, (m, s) in summary.items():
-        out[f"{prefix}{k}_mean"] = float(m)
-        out[f"{prefix}{k}_std"] = float(s)
-    return out
-
-
-def append_hp_combo_log_csv(
-    log_path: str,
-    *,
-    params: dict,
-    val_summary: dict[str, tuple[float, float]],
-    aro_summary: dict[str, tuple[float, float]],
-    combined_mean: float,
-    combo_runtime_sec: float,
-    n_val_folds: int,
-    n_aro_folds: int,
-    best_so_far: bool,
-) -> None:
-    """
-    Appends ONE row per HP combo with mean/std metrics (averaged across folds).
-    Writes header if file doesn't exist / is empty.
-    """
-    os.makedirs(os.path.dirname(log_path) or ".", exist_ok=True)
-
-    row: dict[str, object] = {
-        "ts": datetime.now().isoformat(timespec="seconds"),
-        "combined_mean": float(combined_mean),
-        "runtime_sec": float(combo_runtime_sec),
-        "runtime_min": float(combo_runtime_sec) / 60.0,
-        "n_val_folds": int(n_val_folds),
-        "n_aro_folds": int(n_aro_folds),
-        "best_so_far": int(bool(best_so_far)),
-        **params,
-        **_flatten_summary("val_", val_summary),
-        **_flatten_summary("aro_", aro_summary),
-    }
-
-    file_exists = os.path.exists(log_path)
-    needs_header = (not file_exists) or (os.path.getsize(log_path) == 0)
-
-    core_cols = [
-        "ts",
-        "combined_mean",
-        "runtime_sec",
-        "runtime_min",
-        "n_val_folds",
-        "n_aro_folds",
-        "best_so_far",
-    ]
-    extra_cols = sorted([k for k in row.keys() if k not in core_cols])
-    fieldnames = core_cols + extra_cols
-
-    with open(log_path, "a", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        if needs_header:
-            writer.writeheader()
-        writer.writerow(row)
-        f.flush()
-
-
-def append_hp_combo_log_jsonl(
-    log_path: str,
-    *,
-    params: dict,
-    val_summary: dict[str, tuple[float, float]],
-    aro_summary: dict[str, tuple[float, float]],
-    combined_mean: float,
-    combo_runtime_sec: float,
-    n_val_folds: int,
-    n_aro_folds: int,
-    best_so_far: bool,
-) -> None:
-    """
-    Optional: JSONL is nice for programmatic parsing later.
-    """
-    os.makedirs(os.path.dirname(log_path) or ".", exist_ok=True)
-
-    payload = {
-        "ts": datetime.now().isoformat(timespec="seconds"),
-        "combined_mean": float(combined_mean),
-        "runtime_sec": float(combo_runtime_sec),
-        "n_val_folds": int(n_val_folds),
-        "n_aro_folds": int(n_aro_folds),
-        "best_so_far": bool(best_so_far),
-        "params": params,
-        "val_summary": {k: {"mean": float(m), "std": float(s)} for k, (m, s) in val_summary.items()},
-        "aro_summary": {k: {"mean": float(m), "std": float(s)} for k, (m, s) in aro_summary.items()},
-    }
-
-    with open(log_path, "a") as f:
-        f.write(json.dumps(payload) + "\n")
-        f.flush()
-
-
-# ============================================================
-#                 Final training / saving best
-# ============================================================
+# ---------------- Final training / saving ----------------
 def retrain_and_save_best_models(
     features_table: pd.DataFrame,
     feature_cols: list[str],
     *,
-    valence_col: str,
-    arousal_col: str,
+    targets: list[str],
     thresh: float,
     fixed_T: int,
     best_params: dict,
     out_dir: str = "models",
-) -> tuple[str, str]:
+) -> dict[str, str]:
+    """
+    Retrain one final model per target on ALL sessions using best hyperparams,
+    then save as .keras. Returns {target: saved_path}.
+    """
     os.makedirs(out_dir, exist_ok=True)
+    saved_paths: dict[str, str] = {}
+
+    # For final training, use the full dataset as "train".
     full_df = features_table.drop(columns=["Unnamed: 0"], errors="ignore").reset_index(drop=True)
 
-    # VALENCE
-    print("\n==============================", flush=True)
-    print("FINAL TRAIN | Target: VALENCE (binary)", flush=True)
-    print("==============================", flush=True)
-    X_v, y_v = build_eego_lstm_sequences(
-        full_df,
-        feature_cols=feature_cols,
-        target_col=valence_col,
-        thresh=thresh,
-        fixed_T=fixed_T,
-    )
-    print("Sequence-level valence_bin counts:", np.bincount(y_v.astype(int), minlength=2), flush=True)
+    for target_col in targets:
+        print("\n==============================", flush=True)
+        print(f"FINAL TRAIN | Target: {target_col}", flush=True)
+        print("==============================", flush=True)
+        print("Full label counts:", flush=True)
+        print(full_df[target_col].value_counts(), flush=True)
 
-    model_v, _, _ = train_lstm(
-        X_v,
-        X_v,
-        y_v,
-        y_v,
-        units=best_params["units"],
-        dropout=best_params["dropout"],
-        recurrent_dropout=best_params["recurrent_dropout"],
-        lr=best_params["lr"],
-        epochs=best_params["epochs"],
-        batch_size=best_params["batch_size"],
-        bidirectional=best_params["bidirectional"],
-        patience=best_params["patience"],
-        verbose=best_params["verbose"],
-        random_seed=best_params["random_seed"],
-    )
-    val_path = os.path.join(out_dir, "best_valence_4_sensor.keras")
-    model_v.save(val_path)
-    print(f"Saved -> {val_path}", flush=True)
+        X_seq, y_seq = build_eego_lstm_sequences(
+            full_df,
+            feature_cols=feature_cols,
+            target_col=target_col,
+            thresh=thresh,
+            fixed_T=fixed_T,
+        )
 
-    # AROUSAL
-    print("\n==============================", flush=True)
-    print("FINAL TRAIN | Target: AROUSAL (binary)", flush=True)
-    print("==============================", flush=True)
-    X_a, y_a = build_eego_lstm_sequences(
-        full_df,
-        feature_cols=feature_cols,
-        target_col=arousal_col,
-        thresh=thresh,
-        fixed_T=fixed_T,
-    )
-    print("Sequence-level arousal_bin counts:", np.bincount(y_a.astype(int), minlength=2), flush=True)
+        # NOTE: train_lstm uses validation_split internally, so we can pass X_seq as both train/test placeholders.
+        model, _, _ = train_lstm(
+            X_seq,
+            X_seq,
+            y_seq,
+            y_seq,
+            lr=best_params["lr"],
+            epochs=best_params["epochs"],
+            units=best_params["units"],
+            batch_size=best_params["batch_size"],
+            patience=best_params["patience"],
+            bidirectional=True,
+            verbose=2,  # clean epoch-level output for SLURM logs
+        )
 
-    model_a, _, _ = train_lstm(
-        X_a,
-        X_a,
-        y_a,
-        y_a,
-        units=best_params["units"],
-        dropout=best_params["dropout"],
-        recurrent_dropout=best_params["recurrent_dropout"],
-        lr=best_params["lr"],
-        epochs=best_params["epochs"],
-        batch_size=best_params["batch_size"],
-        bidirectional=best_params["bidirectional"],
-        patience=best_params["patience"],
-        verbose=best_params["verbose"],
-        random_seed=best_params["random_seed"],
-    )
-    aro_path = os.path.join(out_dir, "best_arousal_4_sensor.keras")
-    model_a.save(aro_path)
-    print(f"Saved -> {aro_path}", flush=True)
+        save_path = os.path.join(out_dir, f"best_{target_col.lower()}_lstm.keras")
+        model.save(save_path)
+        saved_paths[target_col] = save_path
+        print(f"Saved best final model -> {save_path}", flush=True)
 
-    return val_path, aro_path
+    return saved_paths
 
 
-# ============================================================
-#                         Main
-# ============================================================
+# ---------------- Main ----------------
 def main() -> None:
-    print("GPUs:", tf.config.list_physical_devices("GPU"), flush=True)
-    print("Starting EEGo LOSOCV (left-out user used for validation)...", flush=True)
+    print("Starting EEGo LSTM CV script...", flush=True)
 
-    # Convenience / sanity checks
+    # Load EEGo data
     df_eego = load_eego_df("dreamer_models/datasets/EEGo_labeled.csv")
     print("EEGo shape:", df_eego.shape, flush=True)
 
@@ -324,356 +192,217 @@ def main() -> None:
     AROUSAL = "affect_arousal"
     THRESH = 2.5
 
-    # Features table (must include EEG features + labels + grouping cols)
+    session_ids = df_eego["session_id"].unique().tolist()
+    print("Number of sessions:", len(session_ids), flush=True)
+
+    counts = df_eego["affect_emotion"].value_counts()
+    print(counts, flush=True)
+    if all(k in counts for k in ["E", "A", "B", "R"]):
+        baseline = (counts["E"] + counts["A"]) / (counts["E"] + counts["A"] + counts["B"] + counts["R"])
+        print("Arousal Baseline:", baseline, flush=True)
+        
+        baseline = (counts["E"] + counts["R"]) / (counts["E"] + counts["A"] + counts["B"] + counts["R"])
+        print("Valence Baseline:", baseline, flush=True)
+
+    # Load features table
     features_table = pd.read_csv("dreamer_models/datasets/eego_features.csv")
     feature_cols = select_eego_features(features_table)
     print("n_features:", len(feature_cols), flush=True)
-
-    # LOSOCV users (leave one user out)
-    user_ids = sorted(features_table["user_id"].dropna().unique().tolist())
-    print("Number of users (LOSOCV folds):", len(user_ids), flush=True)
-    print("Users:", user_ids, flush=True)
-
-    # NOTE: build_eego_lstm_sequences expects fixed_T not None
-    FIXED_T = 2500
-
-    LEFT_OUT_VAL_FRAC = 0.50
+    print(feature_cols, flush=True)
 
     # ---------------- Hyper-parameter grid ----------------
     param_grid = {
-        "lr": [5e-4, 1e-4],
-        "epochs": [100, 300],
-        "units": [128, 256, 512],
-        "batch_size": [256],
+        "lr": [1e-4, 3e-4, 1e-3],
+        "epochs": [100, 300, 1000],
+        "units": [128, 256, 512, 1024],
+        "batch_size": [64, 128, 256],
         "patience": [20],
-        "dropout": [0.20],
-        "recurrent_dropout": [0.0, 0.1],
-        "bidirectional": [True],
-        "random_seed": [42],
-        "verbose": [2],
+        "fixed_T": [800, 1500, 2500, 3000],
     }
+    # param_grid = {
+    #     # Learning rate is usually the #1 driver of stability/speed.
+    #     # 1e-4 is safe; 3e-4 and 1e-3 test faster learning.
+    #     "lr": [1e-4],
+    #     "epochs": [100],
+    #     "units": [256, 512],
+    #     "batch_size": [64, 256],
+    #     "patience": [20],
+    #     "fixed_T": [1200, 2500],
+    # }
+
+
+    # ---------------- Leave-k-out settings ----------------
+    K_LEAVE_OUT = 5  # informational; folds below are fixed at 4 splits
+    rng = np.random.default_rng(42)
+    rng.shuffle(session_ids)
+
+    # 4 disjoint test groups (k=5 each when you have 20 sessions)
+    folds = np.array_split(session_ids, 4)
+
+    for i, test_sessions in enumerate(folds):
+        test_sessions = test_sessions.tolist()
+        print(f"Fold {i}: test(k={len(test_sessions)})={sorted(test_sessions)}", flush=True)
+
+    targets = [VALENCE, AROUSAL]
 
     best_params: dict | None = None
     best_mean_score = -np.inf
-    OPT_METRIC = "bal_acc"
 
-    # ---- Log one line PER HP COMBO (means/std across folds) ----
-    LOG_DIR = "logs"
-    os.makedirs(LOG_DIR, exist_ok=True)
-    hp_csv_log = os.path.join(LOG_DIR, "hp_combo_averages.csv")
-    hp_jsonl_log = os.path.join(LOG_DIR, "hp_combo_averages.jsonl")  # optional
+    # Track best by your combined metric:
+    # Choose which metric to optimize for combined score.
+    # Recommended for imbalance: "f1" or "bal_acc". If you want to keep "acc", set to "acc".
+    OPT_METRIC = "acc"
 
-    for lr, epochs, units, batch_size, patience, dropout, recurrent_dropout, bidirectional, random_seed, verbose in product(
+    for lr, epochs, units, batch_size, patience, fixed_T in product(
         param_grid["lr"],
         param_grid["epochs"],
         param_grid["units"],
         param_grid["batch_size"],
         param_grid["patience"],
-        param_grid["dropout"],
-        param_grid["recurrent_dropout"],
-        param_grid["bidirectional"],
-        param_grid["random_seed"],
-        param_grid["verbose"],
+        param_grid["fixed_T"],
     ):
         print("\n#############################################", flush=True)
-        print(
-            f"HP COMBO: lr={lr}, epochs={epochs}, units={units}, batch={batch_size}, "
-            f"patience={patience}, dropout={dropout}, rec_drop={recurrent_dropout}, "
-            f"bidir={bidirectional}, seed={random_seed}, fixed_T={FIXED_T}, verbose={verbose}, "
-            f"left_out_val_frac={LEFT_OUT_VAL_FRAC}",
-            flush=True,
-        )
+        print(f"HP COMBO: lr={lr}, epochs={epochs}, units={units}, batch={batch_size}, patience={patience}, fixed_T={fixed_T}", flush=True)
         print("#############################################", flush=True)
 
-        val_scores: list[dict[str, float]] = []
-        aro_scores: list[dict[str, float]] = []
+        # Store per-fold metrics (dicts) per target
+        combo_scores: dict[str, list[dict[str, float]]] = {t: [] for t in targets}
+
         t0_combo = time.time()
 
-        # ===================== LOSOCV LOOP =====================
-        for fold_i, test_user in enumerate(user_ids):
+        for fold_i, test_sessions in enumerate(folds):
             print("\n==============================", flush=True)
-            print(f"Fold {fold_i+1}/{len(user_ids)} | LEFT OUT USER: {test_user}", flush=True)
+            print(f"Fold {fold_i} | LEFT OUT SESSIONS: {list(test_sessions)}", flush=True)
             print("==============================", flush=True)
 
             use_features = features_table.drop(columns=["Unnamed: 0"], errors="ignore")
 
-            mask_test = use_features["user_id"] == test_user
+            mask_test = use_features["session_id"].isin(test_sessions)
             train_df = use_features[~mask_test].reset_index(drop=True)
             user_df = use_features[mask_test].reset_index(drop=True)
 
-            if len(user_df) == 0:
-                print(f"WARNING: user_id={test_user} has 0 rows in features_table. Skipping fold.", flush=True)
-                continue
+            for target_col in targets:
+                print(f"\n--- Target: {target_col} ---", flush=True)
+                print("Train label counts:", flush=True)
+                print(train_df[target_col].value_counts(), flush=True)
+                print("Test label counts:", flush=True)
+                print(test_df[target_col].value_counts(), flush=True)
 
-            # ---------------- VALENCE ----------------
-            X_train_v, y_train_v = build_eego_lstm_sequences(
-                train_df,
-                feature_cols=feature_cols,
-                target_col=VALENCE,
-                thresh=THRESH,
-                fixed_T=FIXED_T,
-            )
-
-            X_user_v, y_user_v = build_eego_lstm_sequences(
-                user_df,
-                feature_cols=feature_cols,
-                target_col=VALENCE,
-                thresh=THRESH,
-                fixed_T=FIXED_T,
-            )
-
-            X_val_v, y_val_v, X_test_v, y_test_v = split_sequences_val_test(
-                X_user_v,
-                y_user_v,
-                val_frac=LEFT_OUT_VAL_FRAC,
-                seed=10_000 + fold_i,
-            )
-
-            if X_test_v.shape[0] == 0 or X_val_v.shape[0] == 0:
-                print(
-                    f"WARNING: user_id={test_user} has insufficient sequences for VALENCE "
-                    f"(val={X_val_v.shape[0]}, test={X_test_v.shape[0]}). Skipping.",
-                    flush=True,
+                # Build sequences for LSTM
+                X_train_seq, y_train_seq = build_eego_lstm_sequences(
+                    train_df,
+                    feature_cols=feature_cols,
+                    target_col=target_col,
+                    thresh=THRESH,
+                    fixed_T=fixed_T,
                 )
-            else:
-                print("Train val_bin counts:", np.bincount(y_train_v.astype(int), minlength=2), flush=True)
-                print("VAL   val_bin counts:", np.bincount(y_val_v.astype(int), minlength=2), flush=True)
-                print("TEST  val_bin counts:", np.bincount(y_test_v.astype(int), minlength=2), flush=True)
+                X_test_seq, y_test_seq = build_eego_lstm_sequences(
+                    test_df,
+                    feature_cols=feature_cols,
+                    target_col=target_col,
+                    thresh=THRESH,
+                    fixed_T=fixed_T,
+                )
 
-                model_v, X_v_eval, y_v_eval = train_lstm(
-                    X_train_v,
-                    X_test_v,
-                    y_train_v,
-                    y_test_v,
-                    units=units,
-                    dropout=dropout,
-                    recurrent_dropout=recurrent_dropout,
+                # Optional balancing (uncomment if desired)
+                # X_train_seq, y_train_seq = balance_binary_sequences(X_train_seq, y_train_seq)
+                # X_test_seq, y_test_seq = balance_binary_sequences(X_test_seq, y_test_seq)
+
+                # Train
+                lstm_model, X_test_eval, y_test_eval = train_lstm(
+                    X_train_seq,
+                    X_test_seq,
+                    y_train_seq,
+                    y_test_seq,
                     lr=lr,
                     epochs=epochs,
-                    batch_size=batch_size,
-                    bidirectional=bidirectional,
-                    patience=patience,
-                    verbose=verbose,
-                    random_seed=random_seed,
-                    X_val=X_val_v,
-                    y_val=y_val_v,
-                )
-
-                p_v = model_v.predict(X_v_eval, batch_size=batch_size, verbose=0).reshape(-1)
-                y_v_pred = (p_v >= 0.5).astype(np.int32)
-                y_v_true = y_v_eval.astype(np.int32)
-
-                fold_metrics_v, cm_v = compute_binary_metrics(y_true=y_v_true, y_pred=y_v_pred)
-                print("\nFold metrics (VALENCE | TEST split):", flush=True)
-                for k, v in fold_metrics_v.items():
-                    print(f"  {k}: {v:.4f}", flush=True)
-                print("Confusion matrix (rows=true, cols=pred):\n", cm_v, flush=True)
-                print(
-                    classification_report(
-                        y_v_true,
-                        y_v_pred,
-                        labels=[0, 1],
-                        target_names=["low", "high"],
-                        digits=4,
-                        zero_division=0,
-                    ),
-                    flush=True,
-                )
-                val_scores.append(fold_metrics_v)
-
-            # ---------------- AROUSAL ----------------
-            X_train_a, y_train_a = build_eego_lstm_sequences(
-                train_df,
-                feature_cols=feature_cols,
-                target_col=AROUSAL,
-                thresh=THRESH,
-                fixed_T=FIXED_T,
-            )
-
-            X_user_a, y_user_a = build_eego_lstm_sequences(
-                user_df,
-                feature_cols=feature_cols,
-                target_col=AROUSAL,
-                thresh=THRESH,
-                fixed_T=FIXED_T,
-            )
-
-            X_val_a, y_val_a, X_test_a, y_test_a = split_sequences_val_test(
-                X_user_a,
-                y_user_a,
-                val_frac=LEFT_OUT_VAL_FRAC,
-                seed=20_000 + fold_i,
-            )
-
-            if X_test_a.shape[0] == 0 or X_val_a.shape[0] == 0:
-                print(
-                    f"WARNING: user_id={test_user} has insufficient sequences for AROUSAL "
-                    f"(val={X_val_a.shape[0]}, test={X_test_a.shape[0]}). Skipping.",
-                    flush=True,
-                )
-            else:
-                print("Train aro_bin counts:", np.bincount(y_train_a.astype(int), minlength=2), flush=True)
-                print("VAL   aro_bin counts:", np.bincount(y_val_a.astype(int), minlength=2), flush=True)
-                print("TEST  aro_bin counts:", np.bincount(y_test_a.astype(int), minlength=2), flush=True)
-
-                model_a, X_a_eval, y_a_eval = train_lstm(
-                    X_train_a,
-                    X_test_a,
-                    y_train_a,
-                    y_test_a,
                     units=units,
-                    dropout=dropout,
-                    recurrent_dropout=recurrent_dropout,
-                    lr=lr,
-                    epochs=epochs,
                     batch_size=batch_size,
-                    bidirectional=bidirectional,
                     patience=patience,
-                    verbose=verbose,
-                    random_seed=random_seed,
-                    X_val=X_val_a,
-                    y_val=y_val_a,
+                    bidirectional=True,
+                    verbose=2,  # epoch-level logs (good for SLURM)
                 )
 
-                p_a = model_a.predict(X_a_eval, batch_size=batch_size, verbose=0).reshape(-1)
-                y_a_pred = (p_a >= 0.5).astype(np.int32)
-                y_a_true = y_a_eval.astype(np.int32)
+                # Predict
+                y_prob = lstm_model.predict(X_test_eval, batch_size=batch_size, verbose=0).ravel()
+                y_true = y_test_eval.astype("int32").ravel()
 
-                fold_metrics_a, cm_a = compute_binary_metrics(y_true=y_a_true, y_pred=y_a_pred)
-                print("\nFold metrics (AROUSAL | TEST split):", flush=True)
-                for k, v in fold_metrics_a.items():
+                fold_metrics, y_pred, cm = compute_binary_metrics(y_true=y_true, y_prob=y_prob, thresh=0.5)
+
+                print(f"\nFold metrics ({target_col}):", flush=True)
+                for k, v in fold_metrics.items():
                     print(f"  {k}: {v:.4f}", flush=True)
-                print("Confusion matrix (rows=true, cols=pred):\n", cm_a, flush=True)
-                print(
-                    classification_report(
-                        y_a_true,
-                        y_a_pred,
-                        labels=[0, 1],
-                        target_names=["low", "high"],
-                        digits=4,
-                        zero_division=0,
-                    ),
-                    flush=True,
-                )
-                aro_scores.append(fold_metrics_a)
-        # =================== END LOSOCV LOOP ===================
+                print("Confusion matrix:\n", cm, flush=True)
+                print("Classification report:", flush=True)
+                print(classification_report(y_true, y_pred, digits=4, zero_division=0), flush=True)
 
-        val_summary = summarize_metric_dicts(val_scores)
-        aro_summary = summarize_metric_dicts(aro_scores)
-        val_mean = val_summary.get(OPT_METRIC, (np.nan, np.nan))[0]
-        aro_mean = aro_summary.get(OPT_METRIC, (np.nan, np.nan))[0]
-        combined_mean = float(np.nanmean([val_mean, aro_mean]))
+                combo_scores[target_col].append(fold_metrics)
+
+        # Summaries
+        val_sum = summarize_metric_dicts(combo_scores[VALENCE])
+        aro_sum = summarize_metric_dicts(combo_scores[AROUSAL])
+
+        # Combined score (mean of chosen metric across targets)
+        mean_val = val_sum.get(OPT_METRIC, (np.nan, np.nan))[0]
+        mean_aro = aro_sum.get(OPT_METRIC, (np.nan, np.nan))[0]
+        mean_score = float((mean_val + mean_aro) / 2.0)
 
         dt_combo = time.time() - t0_combo
 
         print("\n=============================================", flush=True)
-        print(
-            f"HP SUMMARY: lr={lr}, epochs={epochs}, units={units}, batch={batch_size}, "
-            f"patience={patience}, dropout={dropout}, rec_drop={recurrent_dropout}, "
-            f"bidir={bidirectional}, seed={random_seed}, fixed_T={FIXED_T}, verbose={verbose}, "
-            f"left_out_val_frac={LEFT_OUT_VAL_FRAC}",
-            flush=True,
-        )
-        print(f"Optimizing metric: mean({OPT_METRIC}_val, {OPT_METRIC}_aro)", flush=True)
+        print(f"HP SUMMARY: lr={lr}, epochs={epochs}, units={units}, batch={batch_size}, patience={patience}, fixed_T={fixed_T}", flush=True)
+        print(f"Optimizing combined mean of metric: {OPT_METRIC}", flush=True)
         print(f"Combo runtime: {dt_combo/60:.1f} minutes", flush=True)
-        print_summary_block("  VALENCE (mean/std):", val_summary)
-        print_summary_block("  AROUSAL (mean/std):", aro_summary)
-        print(f"  Combined mean score = {combined_mean:.4f}", flush=True)
+
+        print_summary_block("  Valence (mean/std):", val_sum)
+        print_summary_block("  Arousal (mean/std):", aro_sum)
+
+        print(f"  Combined mean {OPT_METRIC} score = {mean_score:.4f}", flush=True)
         print("=============================================\n", flush=True)
 
-        # ---- write combo averages to log (mean/std across folds) ----
-        combo_params = {
-            "lr": lr,
-            "epochs": epochs,
-            "units": units,
-            "batch_size": batch_size,
-            "patience": patience,
-            "dropout": dropout,
-            "recurrent_dropout": recurrent_dropout,
-            "bidirectional": bidirectional,
-            "random_seed": random_seed,
-            "verbose": verbose,
-            "fixed_T": FIXED_T,
-            "thresh": THRESH,
-            "left_out_val_frac": LEFT_OUT_VAL_FRAC,
-            "opt_metric": OPT_METRIC,
-        }
-        would_be_best = bool(combined_mean > best_mean_score)
-
-        append_hp_combo_log_csv(
-            hp_csv_log,
-            params=combo_params,
-            val_summary=val_summary,
-            aro_summary=aro_summary,
-            combined_mean=combined_mean,
-            combo_runtime_sec=dt_combo,
-            n_val_folds=len(val_scores),
-            n_aro_folds=len(aro_scores),
-            best_so_far=would_be_best,
-        )
-
-        # optional JSONL too (handy for parsing later)
-        append_hp_combo_log_jsonl(
-            hp_jsonl_log,
-            params=combo_params,
-            val_summary=val_summary,
-            aro_summary=aro_summary,
-            combined_mean=combined_mean,
-            combo_runtime_sec=dt_combo,
-            n_val_folds=len(val_scores),
-            n_aro_folds=len(aro_scores),
-            best_so_far=would_be_best,
-        )
-
-        if combined_mean > best_mean_score:
-            best_mean_score = float(combined_mean)
+        if mean_score > best_mean_score:
+            best_mean_score = mean_score
             best_params = {
                 "lr": lr,
                 "epochs": epochs,
                 "units": units,
                 "batch_size": batch_size,
                 "patience": patience,
-                "dropout": dropout,
-                "recurrent_dropout": recurrent_dropout,
-                "bidirectional": bidirectional,
-                "random_seed": random_seed,
-                "verbose": verbose,
-                "fixed_T": FIXED_T,
-                "thresh": THRESH,
-                "left_out_val_frac": LEFT_OUT_VAL_FRAC,
+                "fixed_T": fixed_T,
                 "opt_metric": OPT_METRIC,
-                "combined_mean_score": combined_mean,
-                "val_summary": {k: {"mean": m, "std": s} for k, (m, s) in val_summary.items()},
-                "aro_summary": {k: {"mean": m, "std": s} for k, (m, s) in aro_summary.items()},
+                "mean_valence_metric": float(mean_val),
+                "mean_arousal_metric": float(mean_aro),
+                "combined_mean_score": float(mean_score),
+                # Keep full summaries too (helps debugging later)
+                "valence_summary": {k: {"mean": m, "std": s} for k, (m, s) in val_sum.items()},
+                "arousal_summary": {k: {"mean": m, "std": s} for k, (m, s) in aro_sum.items()},
             }
             print(">>> NEW BEST HP FOUND <<<", flush=True)
-            print("Best score so far:", f"{best_mean_score:.4f}", flush=True)
+            print("Best combined score so far:", f"{best_mean_score:.4f}", flush=True)
             print("Best params:", best_params, flush=True)
 
-    # Final retrain/save (two separate models)
+    # Save best models as .keras (final retrain on all data)
     if best_params is not None:
-        val_path, aro_path = retrain_and_save_best_models(
+        saved = retrain_and_save_best_models(
             features_table=features_table,
             feature_cols=feature_cols,
-            valence_col=VALENCE,
-            arousal_col=AROUSAL,
-            thresh=float(best_params["thresh"]),
+            targets=targets,
+            thresh=THRESH,
             fixed_T=int(best_params["fixed_T"]),
             best_params=best_params,
             out_dir="models",
         )
-        print("\nSaved final model paths:", flush=True)
-        print("  Valence:", val_path, flush=True)
-        print("  Arousal:", aro_path, flush=True)
+        print("\nSaved model paths:", saved, flush=True)
     else:
         print("No best_params found; skipping final retrain/save.", flush=True)
 
+
     print("\n=============================================", flush=True)
-    print("Best combined score:", f"{best_mean_score:.4f}", flush=True)
-    print("Best params:", best_params, flush=True)
+    print("Best EEGo leave-k-out combined score:", f"{best_mean_score:.4f}", flush=True)
+    print("Best params (with per-target summaries):", best_params, flush=True)
     print("=============================================\n", flush=True)
 
 
 if __name__ == "__main__":
-    # For SLURM: run with `python -u eego_models_binary_separate_losocv_leftoutval.py`
+    # For SLURM: run with `python -u EEGo_models.py`
     main()
